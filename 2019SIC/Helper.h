@@ -11,6 +11,11 @@ namespace ecc {
 	constexpr int MAX_TILE_COUNT_X = 15;
 	constexpr int MAX_TILE_COUNT_Y = 2;
 
+	enum class TileType {
+		Normal,
+		Switch
+	};
+
 	inline void ThrowIfFailed(const std::string& message) {
 		throw std::runtime_error(message);
 	}

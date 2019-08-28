@@ -15,7 +15,7 @@ ecc::GameWindow::GameWindow(const std::string& title, int width, int height,
 	m_graphicsEngine = std::make_unique<GraphicsEngine>(m_window);
 	m_graphicsEngine->LoadMap("map/SIC_Demo_revised.txt");
 
-	m_graphicsEngine->LoadImage("texture/SIC_demo_tiles.png");
+	m_graphicsEngine->LoadImage("texture/SIC_demo_tiles.png", true);
 
 	m_isInit = true;
 }
@@ -39,6 +39,9 @@ void ecc::GameWindow::Broadcast()
 			{
 			case SDLK_ESCAPE:
 				m_isInit = false;
+				break;
+			case SDLK_l:
+				m_graphicsEngine->SwitchLight();
 				break;
 			default:
 				break;

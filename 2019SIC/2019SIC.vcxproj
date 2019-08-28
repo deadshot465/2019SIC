@@ -135,6 +135,7 @@
     <ClCompile Include="GraphicsEngine.cpp" />
     <ClCompile Include="Image.cpp" />
     <ClCompile Include="main.cpp" />
+    <ClCompile Include="Switch.cpp" />
     <ClCompile Include="Tile.cpp" />
     <ClCompile Include="Window.cpp" />
   </ItemGroup>
@@ -142,6 +143,7 @@
     <ClInclude Include="GraphicsEngine.h" />
     <ClInclude Include="Helper.h" />
     <ClInclude Include="Image.h" />
+    <ClInclude Include="Switch.h" />
     <ClInclude Include="Tile.h" />
     <ClInclude Include="Window.h" />
   </ItemGroup>
