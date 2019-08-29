@@ -1,10 +1,11 @@
 #pragma once
+#include <vector>
 
 namespace ecc {
 	class IAnimatable
 	{
 	protected:
-		unsigned int m_frameCount = 0;
+		std::vector<unsigned int> m_frameCounts;
 
 		virtual void Animate() = 0;
 	};

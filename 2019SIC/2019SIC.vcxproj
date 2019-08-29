@@ -132,25 +132,29 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="Camera.cpp" />
     <ClCompile Include="Character.cpp" />
-    <ClCompile Include="GraphicsEngine.cpp" />
+    <ClCompile Include="GameEngine.cpp" />
     <ClCompile Include="IAnimatable.cpp" />
     <ClCompile Include="ICollidable.cpp" />
     <ClCompile Include="Image.cpp" />
     <ClCompile Include="IMovable.cpp" />
     <ClCompile Include="main.cpp" />
+    <ClCompile Include="Object.cpp" />
     <ClCompile Include="Switch.cpp" />
     <ClCompile Include="Tile.cpp" />
     <ClCompile Include="Window.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="Camera.h" />
     <ClInclude Include="Character.h" />
-    <ClInclude Include="GraphicsEngine.h" />
+    <ClInclude Include="GameEngine.h" />
     <ClInclude Include="Helper.h" />
     <ClInclude Include="IAnimatable.h" />
     <ClInclude Include="ICollidable.h" />
     <ClInclude Include="Image.h" />
     <ClInclude Include="IMovable.h" />
+    <ClInclude Include="Object.h" />
     <ClInclude Include="Switch.h" />
     <ClInclude Include="Tile.h" />
     <ClInclude Include="Window.h" />

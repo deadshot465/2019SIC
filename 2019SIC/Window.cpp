@@ -6,6 +6,10 @@ ecc::GameWindow::GameWindow(const std::string& title, int width, int height,
 	SDL_Init(SDL_INIT_VIDEO);
 
 	Uint32 flags = SDL_WINDOW_SHOWN;
+
+	m_scaleX = static_cast<float>(width) / (TILE_WIDTH * MAX_MAP_X);
+	m_scaleY = static_cast<float>(height) / (TILE_HEIGHT * MAX_MAP_Y);
+
 	if (fullScreen) {
 		auto displays = SDL_GetNumVideoDisplays();
 		SDL_DisplayMode display_mode = {};
@@ -14,8 +18,6 @@ ecc::GameWindow::GameWindow(const std::string& title, int width, int height,
 		SDL_GetDisplayBounds(displays - 1, &bounds);
 		width = bounds.w;
 		height = bounds.h;
-		m_scaleX = static_cast<float>(width) / (TILE_WIDTH * MAX_MAP_X);
-		m_scaleY = static_cast<float>(height) / (TILE_HEIGHT * MAX_MAP_Y);
 
 		m_window = SDL_CreateWindow(title.c_str(), xPos, yPos, width, height, flags);
 		SDL_SetWindowFullscreen(m_window, SDL_WINDOW_FULLSCREEN_DESKTOP);
@@ -26,16 +28,22 @@ ecc::GameWindow::GameWindow(const std::string& title, int width, int height,
 	
 	m_surface = SDL_GetWindowSurface(m_window);
 
-	m_graphicsEngine = std::make_unique<GraphicsEngine>(m_window);
-	m_graphicsEngine->LoadMap("map/SIC_Demo_revised.txt");
+	m_graphicsEngine = std::make_unique<GameEngine>(m_window);
+	m_graphicsEngine->LoadMap("map/SIC_Demo_revised_2.txt");
 
-	m_graphicsEngine->LoadImage("texture/SIC_demo_tiles.png", true);
-	m_graphicsEngine->LoadCharacter("texture/girl_walk.png",
-		5 * TILE_WIDTH,
+	m_graphicsEngine->LoadImage("texture/SIC_demo_tiles_2.png", true);
+	m_graphicsEngine->LoadObject("texture/door_new.png",
+		MAX_MAP_X * TILE_WIDTH - (5 * TILE_WIDTH),
+		MAX_MAP_Y * TILE_HEIGHT - (5 * TILE_HEIGHT));
+
+	m_graphicsEngine->LoadCharacter("texture/vampire_idle.png",
+		"texture/vampire_run.png",
+		15 * TILE_WIDTH,
 		MAX_MAP_Y * TILE_HEIGHT - TILE_HEIGHT - CHARACTER_SPRITE_HEIGHT);
 
-	m_graphicsEngine->LoadCharacter("texture/vampire_run.png",
-		10 * TILE_WIDTH,
+	m_graphicsEngine->LoadCharacter("texture/vampire_idle.png",
+		"texture/girl_walk.png",
+		5 * TILE_WIDTH,
 		MAX_MAP_Y * TILE_HEIGHT - TILE_HEIGHT - CHARACTER_SPRITE_HEIGHT);
 
 	m_isInit = true;
@@ -64,6 +72,13 @@ void ecc::GameWindow::Broadcast()
 			case SDLK_l:
 				m_graphicsEngine->SwitchLight();
 				break;
+			case SDLK_LSHIFT:
+			{
+				auto current_index = m_graphicsEngine->GetCharacterIndex();
+				unsigned short next_index = (current_index == 0) ? 1 : 0;
+				m_graphicsEngine->SetCharacterIndex(next_index);
+				break;
+			}
 			default:
 				break;
 			}

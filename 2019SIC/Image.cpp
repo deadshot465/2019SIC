@@ -3,7 +3,7 @@
 #include "Helper.h"
 
 void ecc::Image::LoadImage(SDL_Renderer* renderer, const std::string& fileName,
-	bool transparency, int xPos, int yPos)
+	bool transparency, int xPos, int yPos, bool isTile)
 {
 	m_image = IMG_Load(fileName.c_str());
 
@@ -15,6 +15,7 @@ void ecc::Image::LoadImage(SDL_Renderer* renderer, const std::string& fileName,
 	m_texture = SDL_CreateTextureFromSurface(renderer, m_image);
 	m_width = m_image->w;
 	m_height = m_image->h;
+	m_isTile = isTile;
 
 	m_texCoord = { 0, 0, CHARACTER_SPRITE_WIDTH, CHARACTER_SPRITE_HEIGHT };
 	m_destinationLocation = { xPos, yPos, CHARACTER_SPRITE_WIDTH, CHARACTER_SPRITE_HEIGHT };
@@ -32,7 +33,7 @@ ecc::Image::~Image()
 	SDL_DestroyTexture(m_texture);
 }
 
-void ecc::Image::MoveDestinationLocation(int x, int y) noexcept
+void ecc::Image::MoveDestinationLocation(float x, float y) noexcept
 {
 	m_destinationLocation.x += x;
 	m_destinationLocation.y += y;
@@ -44,17 +45,7 @@ void ecc::Image::SetTexCoord(int x, int y) noexcept
 	m_texCoord.y = y;
 }
 
-SDL_Texture* ecc::Image::GetTexture() const noexcept
+void ecc::Image::Render(SDL_Renderer* renderer)
 {
-	return m_texture;
-}
-
-const SDL_Rect& ecc::Image::GetTexCoord() const noexcept
-{
-	return m_texCoord;
-}
-
-const SDL_Rect& ecc::Image::GetDestinationLocation() const noexcept
-{
-	return m_destinationLocation;
+	SDL_RenderCopy(renderer, m_texture, &m_texCoord, &m_destinationLocation);
 }

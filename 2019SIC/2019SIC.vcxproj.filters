@@ -24,9 +24,6 @@
     <ClCompile Include="Image.cpp">
       <Filter>來源檔案</Filter>
     </ClCompile>
-    <ClCompile Include="GraphicsEngine.cpp">
-      <Filter>來源檔案</Filter>
-    </ClCompile>
     <ClCompile Include="Tile.cpp">
       <Filter>來源檔案</Filter>
     </ClCompile>
@@ -45,6 +42,15 @@
     <ClCompile Include="ICollidable.cpp">
       <Filter>來源檔案</Filter>
     </ClCompile>
+    <ClCompile Include="Object.cpp">
+      <Filter>來源檔案</Filter>
+    </ClCompile>
+    <ClCompile Include="Camera.cpp">
+      <Filter>來源檔案</Filter>
+    </ClCompile>
+    <ClCompile Include="GameEngine.cpp">
+      <Filter>來源檔案</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Window.h">
@@ -54,9 +60,6 @@
       <Filter>標頭檔</Filter>
     </ClInclude>
     <ClInclude Include="Image.h">
-      <Filter>標頭檔</Filter>
-    </ClInclude>
-    <ClInclude Include="GraphicsEngine.h">
       <Filter>標頭檔</Filter>
     </ClInclude>
     <ClInclude Include="Tile.h">
@@ -75,6 +78,15 @@
       <Filter>標頭檔</Filter>
     </ClInclude>
     <ClInclude Include="ICollidable.h">
+      <Filter>標頭檔</Filter>
+    </ClInclude>
+    <ClInclude Include="Object.h">
+      <Filter>標頭檔</Filter>
+    </ClInclude>
+    <ClInclude Include="Camera.h">
+      <Filter>標頭檔</Filter>
+    </ClInclude>
+    <ClInclude Include="GameEngine.h">
       <Filter>標頭檔</Filter>
     </ClInclude>
   </ItemGroup>

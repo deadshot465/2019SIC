@@ -1,11 +1,11 @@
-#include "GraphicsEngine.h"
+#include "GameEngine.h"
 #include <chrono>
 #include <fstream>
 #include <iostream>
 #include <SDL_image.h>
 #include "Switch.h"
 
-ecc::TileCoordinatesSet ecc::GraphicsEngine::CalculateTileCoordinates()
+ecc::TileCoordinatesSet ecc::GameEngine::CalculateTileCoordinates()
 {
 	auto tile_coordinates = TileCoordinatesSet();
 	int x = 0;
@@ -25,7 +25,7 @@ ecc::TileCoordinatesSet ecc::GraphicsEngine::CalculateTileCoordinates()
 	return tile_coordinates;
 }
 
-void ecc::GraphicsEngine::CreateTiles(size_t imageIndex)
+void ecc::GameEngine::CreateTiles(size_t imageIndex)
 {
 	auto src_rect_on = SDL_Rect();
 	auto src_rect_off = SDL_Rect();
@@ -72,15 +72,24 @@ void ecc::GraphicsEngine::CreateTiles(size_t imageIndex)
 	}
 }
 
-void ecc::GraphicsEngine::RenderTiles()
+void ecc::GameEngine::RenderTiles(const SDL_Rect& cameraRect)
 {
 	for (const auto& tile : m_tiles) {
-		SDL_RenderCopy(m_renderer, m_images[0]->GetTexture(), &(tile->GetCurrentRect()),
+
+		/*if (tile->GetDestinationLocation().x > cameraRect.x &&
+			tile->GetDestinationLocation().x < cameraRect.x + cameraRect.w &&
+			tile->GetDestinationLocation().y > cameraRect.y &&
+			tile->GetDestinationLocation().y < cameraRect.y + cameraRect.h) {
+			SDL_RenderCopy(m_renderer, m_images[0]->m_texture, &(tile->GetCurrentRect()),
+				&(tile->GetDestinationLocation()));
+		}*/
+
+		SDL_RenderCopy(m_renderer, m_images[0]->m_texture, &(tile->GetCurrentRect()),
 			&(tile->GetDestinationLocation()));
 	}
 }
 
-ecc::Tile* ecc::GraphicsEngine::GetTile(const SDL_Rect& location) noexcept
+ecc::Tile* ecc::GameEngine::GetTile(const SDL_Rect& location) noexcept
 {
 	for (const auto& tile : m_tiles) {
 		if (tile->GetDestinationLocation().x == location.x &&
@@ -92,25 +101,27 @@ ecc::Tile* ecc::GraphicsEngine::GetTile(const SDL_Rect& location) noexcept
 	return nullptr;
 }
 
-ecc::GraphicsEngine::GraphicsEngine(SDL_Window* window)
+ecc::GameEngine::GameEngine(SDL_Window* window)
 {
 	IMG_Init(IMG_INIT_JPG | IMG_INIT_PNG);
 	m_renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED);
+
+	m_camera = std::make_unique<Camera>();
 }
 
-ecc::GraphicsEngine::~GraphicsEngine()
+ecc::GameEngine::~GameEngine()
 {
 	SDL_DestroyRenderer(m_renderer);
 	IMG_Quit();
 }
 
-void ecc::GraphicsEngine::LoadImage(const std::string& fileName, bool isTileSet)
+void ecc::GameEngine::LoadImage(const std::string& fileName, bool isTileSet)
 {
 	size_t index = m_images.size();
 	m_images.emplace_back(std::make_unique<Image>());
 	auto iter = m_images.end();
 	--iter;
-	iter->get()->LoadImage(m_renderer, fileName);
+	iter->get()->LoadImage(m_renderer, fileName, true, 0, 0, isTileSet);
 
 	if (isTileSet) {
 		auto coordinates = CalculateTileCoordinates();
@@ -122,7 +133,12 @@ void ecc::GraphicsEngine::LoadImage(const std::string& fileName, bool isTileSet)
 		
 }
 
-void ecc::GraphicsEngine::LoadMap(const std::string& mapName)
+void ecc::GameEngine::LoadObject(const std::string& fileName, int xPos, int yPos)
+{
+	m_objects.emplace_back(std::make_unique<Object>(m_renderer, fileName, xPos, yPos));
+}
+
+void ecc::GameEngine::LoadMap(const std::string& mapName)
 {
 	auto fs = std::ifstream();
 
@@ -155,34 +171,61 @@ void ecc::GraphicsEngine::LoadMap(const std::string& mapName)
 	fs.close();
 }
 
-void ecc::GraphicsEngine::LoadCharacter(const std::string& fileName, int xPos, int yPos, float speed)
+void ecc::GameEngine::LoadCharacter(const std::string& waitAnimationFileName,
+	const std::string& moveAnimationFileName,
+	int xPos, int yPos, float speed)
 {
-	m_characters.emplace_back(std::make_unique<Character>(m_renderer, fileName, xPos, yPos, speed));
+	m_characters.emplace_back(std::make_unique<Character>(m_renderer,
+		waitAnimationFileName, moveAnimationFileName, xPos, yPos, speed));
 }
 
-void ecc::GraphicsEngine::Clear(Uint8 r, Uint8 g, Uint8 b, Uint8 a, float scaleX, float scaleY)
+void ecc::GameEngine::Clear(Uint8 r, Uint8 g, Uint8 b, Uint8 a, float scaleX, float scaleY)
 {
 	SDL_SetRenderDrawColor(m_renderer, r, g, b, a);
 	SDL_RenderClear(m_renderer);
 	SDL_RenderSetScale(m_renderer, scaleX, scaleY);
 }
 
-void ecc::GraphicsEngine::Render()
+void ecc::GameEngine::Render()
 {
+	auto camera_x_pos = m_characters[m_characterIndex]->GetCurrentDestination().x - CHARACTER_SPRITE_WIDTH;
+	auto camera_y_pos = m_characters[m_characterIndex]->GetCurrentDestination().y - CHARACTER_SPRITE_HEIGHT;
+
+	m_camera->SetCollisionBox(camera_x_pos, camera_y_pos);
+
+	RenderTiles(m_camera->GetCollisionBox());
 	
 	for (auto i = 0; i < m_images.size(); ++i) {
-		RenderTiles();
+		if (m_images[i]->m_isTile)
+			continue;
+
+		m_images[i]->Render(m_renderer);
+	}
+
+	for (const auto& object : m_objects) {
+		object->Render(m_renderer);
+	}
+
+	for (auto i = 0; i < m_characters.size(); ++i) {
+
+		if (i == m_characterIndex)
+			m_characters[i]->Move();
+
+		m_characters[i]->Render(m_renderer);
 	}
 
 	for (const auto& character : m_characters) {
-		character->Move();
-		character->Render(m_renderer);
+		for (const auto& object : m_objects) {
+			auto res = character->CheckCollision(object->GetCollisionBox());
+			if (res)
+				std::cout << "Collision Detected.\n";
+		}
 	}
 
 	SDL_RenderPresent(m_renderer);
 }
 
-void ecc::GraphicsEngine::SwitchLight()
+void ecc::GameEngine::SwitchLight()
 {
 	for (const auto& index : m_switchIndices) {
 		auto switch_ = reinterpret_cast<Switch*>(m_tiles[index].get());
@@ -218,4 +261,16 @@ void ecc::GraphicsEngine::SwitchLight()
 			target_y->ChangeStatus(!target_y->IsLit());
 		}
 	}
+}
+
+void ecc::GameEngine::SetCharacterIndex(unsigned short index)
+{
+	m_characters[m_characterIndex]->SetStatus(0);
+	m_characterIndex = index;
+	m_characters[m_characterIndex]->SetStatus(1);
+}
+
+unsigned short ecc::GameEngine::GetCharacterIndex() const noexcept
+{
+	return m_characterIndex;
 }

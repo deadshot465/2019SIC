@@ -2,7 +2,7 @@
 #include <memory>
 #include <SDL.h>
 #include <string>
-#include "GraphicsEngine.h"
+#include "GameEngine.h"
 
 namespace ecc {
 	class GameWindow {
@@ -11,7 +11,7 @@ namespace ecc {
 		SDL_Surface* m_surface = nullptr;
 		SDL_Event m_event = {};
 
-		std::unique_ptr<GraphicsEngine> m_graphicsEngine = nullptr;
+		std::unique_ptr<GameEngine> m_graphicsEngine = nullptr;
 
 		bool m_isInit = false;
 		float m_scaleX = 1.0f;
