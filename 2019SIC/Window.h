@@ -14,6 +14,8 @@ namespace ecc {
 		std::unique_ptr<GraphicsEngine> m_graphicsEngine = nullptr;
 
 		bool m_isInit = false;
+		float m_scaleX = 1.0f;
+		float m_scaleY = 1.0f;
 	public:
 		GameWindow(const std::string& title, int width, int height,
 			bool fullScreen = false,

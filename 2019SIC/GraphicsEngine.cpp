@@ -25,7 +25,7 @@ ecc::TileCoordinatesSet ecc::GraphicsEngine::CalculateTileCoordinates()
 	return tile_coordinates;
 }
 
-void ecc::GraphicsEngine::CreateTiles(unsigned int imageIndex)
+void ecc::GraphicsEngine::CreateTiles(size_t imageIndex)
 {
 	auto src_rect_on = SDL_Rect();
 	auto src_rect_off = SDL_Rect();
@@ -88,6 +88,8 @@ ecc::Tile* ecc::GraphicsEngine::GetTile(const SDL_Rect& location) noexcept
 			return tile.get();
 		}
 	}
+
+	return nullptr;
 }
 
 ecc::GraphicsEngine::GraphicsEngine(SDL_Window* window)
@@ -104,7 +106,7 @@ ecc::GraphicsEngine::~GraphicsEngine()
 
 void ecc::GraphicsEngine::LoadImage(const std::string& fileName, bool isTileSet)
 {
-	unsigned int index = m_images.size();
+	size_t index = m_images.size();
 	m_images.emplace_back(std::make_unique<Image>());
 	auto iter = m_images.end();
 	--iter;
@@ -113,7 +115,7 @@ void ecc::GraphicsEngine::LoadImage(const std::string& fileName, bool isTileSet)
 	if (isTileSet) {
 		auto coordinates = CalculateTileCoordinates();
 		m_tileCoordinateSet.insert(
-			std::pair<unsigned int, unsigned int>(index, static_cast<unsigned int>(m_texCoordIndices.size())));
+			std::pair<size_t, size_t>(index, m_texCoordIndices.size()));
 		m_tileCoordinates.emplace_back(coordinates);
 		CreateTiles(index);
 	}
@@ -140,7 +142,7 @@ void ecc::GraphicsEngine::LoadMap(const std::string& mapName)
 
 			if (fs.fail()) {
 				fs.clear();
-				long location = fs.tellg();
+				long long location = fs.tellg();
 				fs.seekg(location + 1);
 			}
 			else {
@@ -153,16 +155,28 @@ void ecc::GraphicsEngine::LoadMap(const std::string& mapName)
 	fs.close();
 }
 
-void ecc::GraphicsEngine::Clear(Uint8 r, Uint8 g, Uint8 b, Uint8 a)
+void ecc::GraphicsEngine::LoadCharacter(const std::string& fileName, int xPos, int yPos, float speed)
+{
+	m_characters.emplace_back(std::make_unique<Character>(m_renderer, fileName, xPos, yPos, speed));
+}
+
+void ecc::GraphicsEngine::Clear(Uint8 r, Uint8 g, Uint8 b, Uint8 a, float scaleX, float scaleY)
 {
 	SDL_SetRenderDrawColor(m_renderer, r, g, b, a);
 	SDL_RenderClear(m_renderer);
+	SDL_RenderSetScale(m_renderer, scaleX, scaleY);
 }
 
 void ecc::GraphicsEngine::Render()
 {
+	
 	for (auto i = 0; i < m_images.size(); ++i) {
 		RenderTiles();
+	}
+
+	for (const auto& character : m_characters) {
+		character->Move();
+		character->Render(m_renderer);
 	}
 
 	SDL_RenderPresent(m_renderer);

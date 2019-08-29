@@ -4,6 +4,7 @@
 
 namespace ecc {
 
+	class Character;
 	class GraphicsEngine;
 
 	class Image
@@ -13,16 +14,23 @@ namespace ecc {
 		SDL_Texture* m_texture = nullptr;
 		int m_width = 0;
 		int m_height = 0;
+		SDL_Rect m_texCoord = {};
+		SDL_Rect m_destinationLocation = {};
 
-		void LoadImage(SDL_Renderer* renderer, const std::string& fileName);
+		void LoadImage(SDL_Renderer* renderer, const std::string& fileName, bool transparency = true, int xPos = 0, int yPos = 0);
 
+		friend Character;
 		friend GraphicsEngine;
 	public:
 		Image();
 		~Image();
 
+		void MoveDestinationLocation(int x, int y) noexcept;
+		void SetTexCoord(int x, int y) noexcept;
+
 		SDL_Texture* GetTexture() const noexcept;
-		SDL_Rect GetRect() const noexcept;
+		const SDL_Rect& GetTexCoord() const noexcept;
+		const SDL_Rect& GetDestinationLocation() const noexcept;
 	};
 }
 

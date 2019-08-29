@@ -33,6 +33,18 @@
     <ClCompile Include="Switch.cpp">
       <Filter>來源檔案</Filter>
     </ClCompile>
+    <ClCompile Include="Character.cpp">
+      <Filter>來源檔案</Filter>
+    </ClCompile>
+    <ClCompile Include="IMovable.cpp">
+      <Filter>來源檔案</Filter>
+    </ClCompile>
+    <ClCompile Include="IAnimatable.cpp">
+      <Filter>來源檔案</Filter>
+    </ClCompile>
+    <ClCompile Include="ICollidable.cpp">
+      <Filter>來源檔案</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Window.h">
@@ -51,6 +63,18 @@
       <Filter>標頭檔</Filter>
     </ClInclude>
     <ClInclude Include="Switch.h">
+      <Filter>標頭檔</Filter>
+    </ClInclude>
+    <ClInclude Include="Character.h">
+      <Filter>標頭檔</Filter>
+    </ClInclude>
+    <ClInclude Include="IMovable.h">
+      <Filter>標頭檔</Filter>
+    </ClInclude>
+    <ClInclude Include="IAnimatable.h">
+      <Filter>標頭檔</Filter>
+    </ClInclude>
+    <ClInclude Include="ICollidable.h">
       <Filter>標頭檔</Filter>
     </ClInclude>
   </ItemGroup>
