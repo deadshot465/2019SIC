@@ -7,9 +7,6 @@ ecc::GameWindow::GameWindow(const std::string& title, int width, int height,
 
 	Uint32 flags = SDL_WINDOW_SHOWN;
 
-	m_scaleX = static_cast<float>(width) / (TILE_WIDTH * MAX_MAP_X);
-	m_scaleY = static_cast<float>(height) / (TILE_HEIGHT * MAX_MAP_Y);
-
 	if (fullScreen) {
 		auto displays = SDL_GetNumVideoDisplays();
 		SDL_DisplayMode display_mode = {};
@@ -25,32 +22,47 @@ ecc::GameWindow::GameWindow(const std::string& title, int width, int height,
 	else {
 		m_window = SDL_CreateWindow(title.c_str(), xPos, yPos, width, height, flags);
 	}
+
+	m_scaleX = static_cast<float>(width) / MAP_WIDTH;
+	m_scaleY = static_cast<float>(height) / MAP_HEIGHT;
 	
 	m_surface = SDL_GetWindowSurface(m_window);
 
 	m_graphicsEngine = std::make_unique<GameEngine>(m_window);
-	m_graphicsEngine->LoadMap("map/SIC_Demo_revised_2.txt");
+	m_graphicsEngine->LoadMap("map/Stage1_background.txt", "texture/Merged_background.png");
+	m_graphicsEngine->LoadMap("map/Stage1_foreground.txt", "texture/Merged_foreground.png");
 
-	m_graphicsEngine->LoadImage("texture/SIC_demo_tiles_2.png", true);
 	m_graphicsEngine->LoadObject("texture/door_new.png",
 		MAX_MAP_X * TILE_WIDTH - (5 * TILE_WIDTH),
 		MAX_MAP_Y * TILE_HEIGHT - (5 * TILE_HEIGHT));
 
+	m_graphicsEngine->LoadEnemy("texture/vampire_enemy.png",
+		"texture/vampire_enemy.png",
+		25 * TILE_WIDTH,
+		MAX_MAP_Y * TILE_HEIGHT - TILE_HEIGHT - CHARACTER_SPRITE_HEIGHT);
+
 	m_graphicsEngine->LoadCharacter("texture/vampire_idle.png",
 		"texture/vampire_run.png",
+		"texture/vampire_slash.png",
+		ecc::Character::CharacterFlag::Father,
 		15 * TILE_WIDTH,
-		MAX_MAP_Y * TILE_HEIGHT - TILE_HEIGHT - CHARACTER_SPRITE_HEIGHT);
+		MAX_MAP_Y * TILE_HEIGHT - TILE_HEIGHT - CHARACTER_SPRITE_HEIGHT, 5.0f,
+		ImageIndexFlag::Moving);
 
-	m_graphicsEngine->LoadCharacter("texture/vampire_idle.png",
+	m_graphicsEngine->LoadCharacter("texture/girl_idle.png",
 		"texture/girl_walk.png",
+		"texture/vampire_slash.png",
+		ecc::Character::CharacterFlag::Daughter,
 		5 * TILE_WIDTH,
-		MAX_MAP_Y * TILE_HEIGHT - TILE_HEIGHT - CHARACTER_SPRITE_HEIGHT);
+		MAX_MAP_Y * TILE_HEIGHT - TILE_HEIGHT - CHARACTER_SPRITE_HEIGHT, 2.5f);
 
+	SDL_UpdateWindowSurface(m_window);
 	m_isInit = true;
 }
 
 ecc::GameWindow::~GameWindow()
 {
+	SDL_FreeSurface(m_surface);
 	SDL_DestroyWindow(m_window);
 	SDL_Quit();
 }
@@ -87,8 +99,8 @@ void ecc::GameWindow::Broadcast()
 
 	}
 
-	m_graphicsEngine->Clear(0xFF, 0xFF, 0xFF, 0xFF, m_scaleX, m_scaleY);
-	m_graphicsEngine->Render();
+	m_graphicsEngine->Clear(0xFF, 0xFF, 0xFF, 0xFF);
+	m_graphicsEngine->Render(m_surface, m_scaleX, m_scaleY);
 }
 
 bool ecc::GameWindow::IsInit() const noexcept

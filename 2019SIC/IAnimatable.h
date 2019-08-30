@@ -7,7 +7,7 @@ namespace ecc {
 	protected:
 		std::vector<unsigned int> m_frameCounts;
 
-		virtual void Animate() = 0;
+		virtual void Animate(float speedFactor) = 0;
 	};
 }
 

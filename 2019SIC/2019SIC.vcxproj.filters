@@ -51,6 +51,12 @@
     <ClCompile Include="GameEngine.cpp">
       <Filter>來源檔案</Filter>
     </ClCompile>
+    <ClCompile Include="Enemy.cpp">
+      <Filter>來源檔案</Filter>
+    </ClCompile>
+    <ClCompile Include="IRenderable.cpp">
+      <Filter>來源檔案</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Window.h">
@@ -87,6 +93,12 @@
       <Filter>標頭檔</Filter>
     </ClInclude>
     <ClInclude Include="GameEngine.h">
+      <Filter>標頭檔</Filter>
+    </ClInclude>
+    <ClInclude Include="Enemy.h">
+      <Filter>標頭檔</Filter>
+    </ClInclude>
+    <ClInclude Include="IRenderable.h">
       <Filter>標頭檔</Filter>
     </ClInclude>
   </ItemGroup>

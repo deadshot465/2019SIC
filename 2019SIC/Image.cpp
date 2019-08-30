@@ -1,9 +1,8 @@
 #include "Image.h"
 #include <SDL_image.h>
-#include "Helper.h"
 
 void ecc::Image::LoadImage(SDL_Renderer* renderer, const std::string& fileName,
-	bool transparency, int xPos, int yPos, bool isTile)
+	bool transparency, int xPos, int yPos, bool isTile, ecc::ImageIndexFlag imageFlag)
 {
 	m_image = IMG_Load(fileName.c_str());
 
@@ -17,8 +16,16 @@ void ecc::Image::LoadImage(SDL_Renderer* renderer, const std::string& fileName,
 	m_height = m_image->h;
 	m_isTile = isTile;
 
-	m_texCoord = { 0, 0, CHARACTER_SPRITE_WIDTH, CHARACTER_SPRITE_HEIGHT };
-	m_destinationLocation = { xPos, yPos, CHARACTER_SPRITE_WIDTH, CHARACTER_SPRITE_HEIGHT };
+	if (!isTile) {
+		if (imageFlag == ImageIndexFlag::Attacking) {
+			m_texCoord = { 0, 0, CHARACTER_ATTACK_SPRITE_WIDTH, CHARACTER_ATTACK_SPRITE_HEIGHT };
+			m_destinationLocation = { xPos, yPos, CHARACTER_ATTACK_SPRITE_WIDTH, CHARACTER_ATTACK_SPRITE_HEIGHT };
+		}
+		else {
+			m_texCoord = { 0, 0, CHARACTER_SPRITE_WIDTH, CHARACTER_SPRITE_HEIGHT };
+			m_destinationLocation = { xPos, yPos, CHARACTER_SPRITE_WIDTH, CHARACTER_SPRITE_HEIGHT };
+		}
+	}
 
 	SDL_FreeSurface(m_image);
 }
@@ -45,7 +52,8 @@ void ecc::Image::SetTexCoord(int x, int y) noexcept
 	m_texCoord.y = y;
 }
 
-void ecc::Image::Render(SDL_Renderer* renderer)
+void ecc::Image::Render(SDL_Renderer* renderer, SDL_RendererFlip flipMode, double angle,
+	const SDL_Point * center)
 {
-	SDL_RenderCopy(renderer, m_texture, &m_texCoord, &m_destinationLocation);
+	SDL_RenderCopyEx(renderer, m_texture, &m_texCoord, &m_destinationLocation, angle, center, flipMode);
 }

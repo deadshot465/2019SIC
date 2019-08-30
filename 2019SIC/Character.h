@@ -1,4 +1,5 @@
 #pragma once
+#include <chrono>
 #include <memory>
 #include <SDL.h>
 #include <string>
@@ -7,33 +8,49 @@
 #include "ICollidable.h"
 #include "Image.h"
 #include "IMovable.h"
+#include "IRenderable.h"
 
 namespace ecc {
-	class Character : public IMovable, public IAnimatable, public ICollidable
+	class Character : public IMovable, public IAnimatable, public ICollidable, public IRenderable
 	{
-	private:
-		std::vector<std::unique_ptr<Image>> m_images;
-
-		unsigned short m_currentImageIndex = 0;
-
 	public:
+
+		static enum class CharacterFlag {
+			Father,
+			Daughter
+		};
+
 		Character(SDL_Renderer* renderer,
 			const std::string& waitAnimationFileName,
 			const std::string& moveAnimationFileName,
-			int xPos, int yPos, float speed = 5.0f);
+			const std::string& attackAnimationFileName,
+			CharacterFlag characterFlag,
+			int xPos, int yPos, float speed, ImageIndexFlag initialStatus);
 		~Character();
 
 		virtual void Move() override;
-		void Render(SDL_Renderer* renderer);
-		void SetStatus(unsigned short status);
+		virtual void Render(SDL_Renderer* renderer, float speedFactor = 1.0f) override;
+		void SetStatus(ImageIndexFlag status);
 
-		// ìßâﬂ IAnimatable „ãè≥
-		virtual void Animate() override;
+		// IAnimatable ÇâÓÇµÇƒåpè≥Ç≥ÇÍÇ‹ÇµÇΩ
+		virtual void Animate(float speedFactor) override;
 
 		// ICollidable ÇâÓÇµÇƒåpè≥Ç≥ÇÍÇ‹ÇµÇΩ
 		virtual void SetCollisionBox() override;
 
-		const SDL_Rect& GetCurrentDestination() const noexcept;
+		// IRenderable ÇâÓÇµÇƒåpè≥Ç≥ÇÍÇ‹ÇµÇΩ
+		virtual const SDL_Rect& GetCurrentDestination() override;
+
+		ImageIndexFlag GetCurrentStatus() const noexcept;
+
+	private:
+		ImageIndexFlag m_currentImageIndex = ImageIndexFlag::Idle;
+		CharacterFlag m_characterFlag = {};
+
+		std::chrono::steady_clock::time_point m_startTime;
+		std::chrono::steady_clock::time_point m_currentTime;
+		unsigned int m_currentFrame = 0;
+		unsigned int m_currentXPos = 0;
 	};
 }
 

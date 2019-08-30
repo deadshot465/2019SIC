@@ -2,13 +2,11 @@
 #include <memory>
 #include "ICollidable.h"
 #include "Image.h"
+#include "IRenderable.h"
 
 namespace ecc {
-	class Object : public ICollidable
+	class Object : public ICollidable, public IRenderable
 	{
-	private:
-		std::unique_ptr<Image> m_image = nullptr;
-
 	public:
 		Object(SDL_Renderer* renderer, const std::string& fileName, int xPos, int yPos);
 		~Object();
@@ -16,7 +14,10 @@ namespace ecc {
 		// ICollidable ‚ğ‰î‚µ‚ÄŒp³‚³‚ê‚Ü‚µ‚½
 		virtual void SetCollisionBox() override;
 
-		void Render(SDL_Renderer* renderer);
+		virtual void Render(SDL_Renderer* renderer, float speedFactor = 1.0f) override;
+
+		// IRenderable ‚ğ‰î‚µ‚ÄŒp³‚³‚ê‚Ü‚µ‚½
+		virtual const SDL_Rect& GetCurrentDestination() override;
 	};
 }
 

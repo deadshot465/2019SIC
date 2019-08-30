@@ -10,7 +10,7 @@ ecc::Object::Object(SDL_Renderer* renderer, const std::string& fileName, int xPo
 
 ecc::Object::~Object()
 {
-	m_image.reset();
+	IRenderable::~IRenderable();
 }
 
 void ecc::Object::SetCollisionBox()
@@ -21,7 +21,12 @@ void ecc::Object::SetCollisionBox()
 	m_collisionBox.y = m_image->m_destinationLocation.y;
 }
 
-void ecc::Object::Render(SDL_Renderer* renderer)
+void ecc::Object::Render(SDL_Renderer* renderer, float speedFactor)
 {
 	m_image->Render(renderer);
+}
+
+const SDL_Rect& ecc::Object::GetCurrentDestination()
+{
+	return m_image->m_destinationLocation;
 }
