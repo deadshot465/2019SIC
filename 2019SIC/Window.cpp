@@ -28,9 +28,9 @@ ecc::GameWindow::GameWindow(const std::string& title, int width, int height,
 	
 	m_surface = SDL_GetWindowSurface(m_window);
 
-	m_graphicsEngine = std::make_unique<GameEngine>(m_window);
-	m_graphicsEngine->LoadMap("map/Stage1_background.txt", "texture/Merged_background.png");
-	m_graphicsEngine->LoadMap("map/Stage1_foreground.txt", "texture/Merged_foreground.png");
+	m_graphicsEngine = std::make_unique<GameEngine>(m_window, m_surface);
+	m_graphicsEngine->LoadMap("map/Stage1_background.txt", "texture/Merged_background.png", m_surface);
+	m_graphicsEngine->LoadMap("map/Stage1_foreground.txt", "texture/Merged_foreground.png", m_surface);
 
 	m_graphicsEngine->LoadObject("texture/door_new.png",
 		MAX_MAP_X * TILE_WIDTH - (5 * TILE_WIDTH),

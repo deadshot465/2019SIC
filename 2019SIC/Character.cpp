@@ -87,6 +87,13 @@ void ecc::Character::Render(SDL_Renderer* renderer, float speedFactor)
 	m_images[static_cast<size_t>(m_currentImageIndex)]->Render(renderer, m_flipMode);
 }
 
+void ecc::Character::Render(SDL_Renderer* renderer, int offsetX, int offsetY, float speedFactor)
+{
+	Animate(speedFactor);
+	m_images[static_cast<size_t>(m_currentImageIndex)]->Render(renderer, m_flipMode, 0.0,
+		nullptr, offsetX, offsetY);
+}
+
 void ecc::Character::SetStatus(ImageIndexFlag status)
 {
 	m_currentImageIndex = status;

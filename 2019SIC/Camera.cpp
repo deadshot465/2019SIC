@@ -1,6 +1,16 @@
 #include "Camera.h"
 #include "Helper.h"
 
+ecc::Camera::Camera(SDL_Surface* windowSurface) : m_surfaceHandle(windowSurface)
+{
+	m_collisionBox.w = 192;
+	m_collisionBox.h = 128;
+}
+
+ecc::Camera::~Camera()
+{
+}
+
 void ecc::Camera::Move()
 {
 }
@@ -10,14 +20,11 @@ void ecc::Camera::SetCollisionBox()
 	
 }
 
-void ecc::Camera::SetCollisionBox(int xLocation, int yLocation)
+void ecc::Camera::SetCollisionBox(int xLocation, int yLocation, int maxX, int maxY)
 {
 	SDL_DisplayMode display_mode = {};
 	SDL_GetCurrentDisplayMode(0, &display_mode);
 
-	m_collisionBox.w = MAP_WIDTH / 4;
-	m_collisionBox.h = MAP_HEIGHT / 4;
-
-	m_collisionBox.x = (xLocation + m_collisionBox.w) > MAP_WIDTH ? (MAP_WIDTH - m_collisionBox.w) : xLocation;
-	m_collisionBox.y = (yLocation + m_collisionBox.h) > MAP_HEIGHT ? (MAP_HEIGHT - m_collisionBox.h) : yLocation;
+	m_collisionBox.x = xLocation;
+	m_collisionBox.y = yLocation;
 }

@@ -23,6 +23,7 @@ namespace ecc {
 		SDL_Renderer* m_renderer = nullptr;
 		SDL_Texture* m_defaultRtv = nullptr;
 		SDL_Texture* m_tileRtv = nullptr;
+		SDL_Texture* m_cameraRtv = nullptr;
 		std::vector<SDL_Texture*> m_tileRtvs;
 
 		std::unique_ptr<Camera> m_camera = nullptr;
@@ -48,21 +49,26 @@ namespace ecc {
 
 		bool m_tileRendered = false;
 		unsigned short m_characterIndex = 0;
+
+		void UpdateCharacters();
 		
-		void CreateTiles(size_t imageIndex, int totalWidth, int totalHeight);
-		void RenderTiles(SDL_Surface* windowSurface);
+		void CreateTiles(size_t imageIndex, int totalWidth, int totalHeight,
+			SDL_Surface* windowSurface);
+		void RenderTiles(SDL_Surface* windowSurface, const SDL_Rect& cameraRect);
 		Tile* GetTile(const SDL_Rect& location) noexcept;
 		
 		int GetSingleDirectionMoveBound(const SDL_Rect& nextArea, int increment);
 		void GetEnemyMoveBounds(Enemy* enemy, int& leftBound, int& rightBound);
 		void MoveEnemy();
 	public:
-		GameEngine(SDL_Window* window);
+		GameEngine(SDL_Window* window, SDL_Surface* windowSurface);
 		~GameEngine();
 
-		void LoadImage(const std::string& fileName, bool isTileSet = false);
+		void LoadImage(const std::string& fileName, SDL_Surface* windowSurface,
+			bool isTileSet = false);
 		void LoadObject(const std::string& fileName, int xPos, int yPos);
-		void LoadMap(const std::string& mapName, const std::string& fileName);
+		void LoadMap(const std::string& mapName, const std::string& fileName,
+			SDL_Surface* windowSurface);
 		void LoadCharacter(const std::string& waitAnimationFileName,
 			const std::string& moveAnimationFileName,
 			const std::string& attackAnimationFileName,

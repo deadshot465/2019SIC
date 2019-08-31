@@ -30,6 +30,7 @@ namespace ecc {
 
 		virtual void Move() override;
 		virtual void Render(SDL_Renderer* renderer, float speedFactor = 1.0f) override;
+		void Render(SDL_Renderer* renderer, int offsetX, int offsetY, float speedFactor = 1.0f);
 		void SetStatus(ImageIndexFlag status);
 
 		// IAnimatable ‚ğ‰î‚µ‚ÄŒp³‚³‚ê‚Ü‚µ‚½

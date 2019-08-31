@@ -53,7 +53,10 @@ void ecc::Image::SetTexCoord(int x, int y) noexcept
 }
 
 void ecc::Image::Render(SDL_Renderer* renderer, SDL_RendererFlip flipMode, double angle,
-	const SDL_Point * center)
+	const SDL_Point * center, int offsetX, int offsetY)
 {
-	SDL_RenderCopyEx(renderer, m_texture, &m_texCoord, &m_destinationLocation, angle, center, flipMode);
+	auto dst_rect = m_destinationLocation;
+	dst_rect.x -= offsetX;
+	dst_rect.y -= offsetY;
+	SDL_RenderCopyEx(renderer, m_texture, &m_texCoord, &dst_rect, angle, center, flipMode);
 }
