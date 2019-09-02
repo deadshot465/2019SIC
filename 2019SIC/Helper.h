@@ -34,7 +34,7 @@ namespace ecc {
 	constexpr int TOP_Y_BOUND = TILE_HEIGHT;
 	constexpr int BOTTOM_Y_BOUND = MAX_MAP_Y * TILE_HEIGHT - TILE_HEIGHT;
 
-	constexpr int MAX_ANIMATION_COUNT = 3;
+	constexpr int MAX_ANIMATION_COUNT = 5;
 
 	enum class TileType {
 		Normal,
@@ -43,8 +43,15 @@ namespace ecc {
 
 	enum class ImageIndexFlag {
 		Idle,
-		Moving,
-		Attacking
+		Move,
+		Attack,
+		Jump,
+		Fall
+	};
+
+	enum class CharacterStatusFlag {
+		Incontrollable,
+		Controllable
 	};
 
 	inline void ThrowIfFailed(const std::string& message) {

@@ -17,13 +17,13 @@ void ecc::Image::LoadImage(SDL_Renderer* renderer, const std::string& fileName,
 	m_isTile = isTile;
 
 	if (!isTile) {
-		if (imageFlag == ImageIndexFlag::Attacking) {
+		if (imageFlag == ImageIndexFlag::Attack) {
 			m_texCoord = { 0, 0, CHARACTER_ATTACK_SPRITE_WIDTH, CHARACTER_ATTACK_SPRITE_HEIGHT };
-			m_destinationLocation = { xPos, yPos, CHARACTER_ATTACK_SPRITE_WIDTH, CHARACTER_ATTACK_SPRITE_HEIGHT };
+			m_destinationLocation = { xPos, yPos, CHARACTER_ATTACK_SPRITE_WIDTH * 2, CHARACTER_ATTACK_SPRITE_HEIGHT * 2 };
 		}
 		else {
 			m_texCoord = { 0, 0, CHARACTER_SPRITE_WIDTH, CHARACTER_SPRITE_HEIGHT };
-			m_destinationLocation = { xPos, yPos, CHARACTER_SPRITE_WIDTH, CHARACTER_SPRITE_HEIGHT };
+			m_destinationLocation = { xPos, yPos, CHARACTER_SPRITE_WIDTH * 2, CHARACTER_SPRITE_HEIGHT * 2 };
 		}
 	}
 

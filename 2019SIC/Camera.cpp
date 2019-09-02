@@ -3,7 +3,7 @@
 
 ecc::Camera::Camera(SDL_Surface* windowSurface) : m_surfaceHandle(windowSurface)
 {
-	m_collisionBox.w = 192;
+	m_collisionBox.w = 384;
 	m_collisionBox.h = 128;
 }
 

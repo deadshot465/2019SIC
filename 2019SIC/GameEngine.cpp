@@ -33,44 +33,22 @@ ecc::TileCoordinatesSet ecc::GameEngine::CalculateTileCoordinates(int totalWidth
 	return tile_coordinates;
 }
 
-void ecc::GameEngine::UpdateCharacters()
+void ecc::GameEngine::UpdateCharacters(int offsetX, int offsetY, SDL_Surface* windowSurface)
 {
 	if (m_characterIndex == 0) {
-		m_father->Move();
+		m_father->Jump();
+		m_father->Move(windowSurface);
 	}
 	else {
-		m_daughter->Move();
+		m_daughter->Jump();
+		m_daughter->Move(windowSurface);
 	}
 
-	switch (m_father->GetCurrentStatus()) {
-	case ImageIndexFlag::Idle:
-		m_father->Render(m_renderer, m_camera->GetCollisionBox().x,
-			m_camera->GetCollisionBox().y, 5.0f);
-		break;
-	case ImageIndexFlag::Moving:
-		m_father->Render(m_renderer, m_camera->GetCollisionBox().x,
-			m_camera->GetCollisionBox().y, 0.25f);
-		break;
-	case ImageIndexFlag::Attacking:
-		m_father->Render(m_renderer, m_camera->GetCollisionBox().x,
-			m_camera->GetCollisionBox().y, 1.0f);
-		break;
-	}
+	m_father->Render(m_renderer, offsetX,
+		offsetY, 0.0f);
 
-	switch (m_daughter->GetCurrentStatus()) {
-	case ImageIndexFlag::Idle:
-		m_daughter->Render(m_renderer, m_camera->GetCollisionBox().x,
-			m_camera->GetCollisionBox().y, 3.0f);
-		break;
-	case ImageIndexFlag::Moving:
-		m_daughter->Render(m_renderer, m_camera->GetCollisionBox().x,
-			m_camera->GetCollisionBox().y, 1.0f);
-		break;
-	case ImageIndexFlag::Attacking:
-		m_daughter->Render(m_renderer, m_camera->GetCollisionBox().x,
-			m_camera->GetCollisionBox().y, 0.5f);
-		break;
-	}
+	m_daughter->Render(m_renderer, offsetX,
+		offsetY, 0.0f);
 
 	for (const auto& object : m_objects) {
 		auto res_1 = m_father->CheckCollision(object->GetCollisionBox());
@@ -102,24 +80,24 @@ void ecc::GameEngine::CreateTiles(size_t imageIndex, int totalWidth, int totalHe
 				if (column < offset) continue;
 
 				if (column > offset + total_columns) {
-					src_rect_off = tex_coord[current_row + 1ll][column % 10];
-					src_rect_on = tex_coord[current_row][column % 10];
+					src_rect_off = tex_coord[current_row + 1ll][column % total_columns];
+					src_rect_on = tex_coord[current_row][column % total_columns];
 					is_lit = false;
 					break;
 				}
 				else {
-					src_rect_off = tex_coord[current_row + 1ll][column % 10];
-					src_rect_on = tex_coord[current_row][column % 10];
+					src_rect_off = tex_coord[current_row + 1ll][column % total_columns];
+					src_rect_on = tex_coord[current_row][column % total_columns];
 					is_lit = true;
 					break;
 				}
 			}
-			dst_rect.x = x * TILE_WIDTH;
+			dst_rect.x = x * TILE_WIDTH * 2;
 			//dst_rect.x = x * (windowSurface->w / m_currentMapWidth * TILE_WIDTH);
-			dst_rect.y = y * TILE_HEIGHT;
+			dst_rect.y = y * TILE_HEIGHT * 2;
 			//dst_rect.y = y * (windowSurface->h / m_currentMapHeight * TILE_HEIGHT);
-			dst_rect.w = TILE_WIDTH;
-			dst_rect.h = TILE_HEIGHT;
+			dst_rect.w = TILE_WIDTH * 2;
+			dst_rect.h = TILE_HEIGHT * 2;
 			++x;
 			tiles.emplace_back(std::make_shared<Tile>(src_rect_on, src_rect_off, dst_rect, TileType::Normal, is_lit));
 		}
@@ -175,8 +153,8 @@ void ecc::GameEngine::RenderTiles(SDL_Surface* windowSurface, const SDL_Rect& ca
 	int height = 0;
 	SDL_QueryTexture(m_defaultRtv, &format, &access, &width, &height);
 	m_tileRtv = SDL_CreateTexture(m_renderer, format, SDL_TEXTUREACCESS_TARGET,
-		m_currentMapWidth * TILE_WIDTH,
-		m_currentMapHeight * TILE_HEIGHT);
+		m_currentMapWidth * TILE_WIDTH * 2,
+		m_currentMapHeight * TILE_HEIGHT * 2);
 	SDL_SetRenderTarget(m_renderer, m_tileRtv);
 	SDL_SetRenderDrawColor(m_renderer, 0xFF, 0xFF, 0xFF, 0xFF);
 	SDL_RenderClear(m_renderer);
@@ -196,65 +174,6 @@ void ecc::GameEngine::RenderTiles(SDL_Surface* windowSurface, const SDL_Rect& ca
 
 	}
 	SDL_SetRenderTarget(m_renderer, nullptr);
-
-	//if (!m_tileRendered) {
-
-	//	for (size_t i = 0; i < m_tileSet.size(); ++i) {
-	//		Uint32 format = 0;
-	//		int access = 0;
-	//		int width = 0;
-	//		int height = 0;
-
-	//		auto image_index_iter = std::find_if(m_tileCoordinateMapping.cbegin(),
-	//			m_tileCoordinateMapping.cend(), [&i](const std::pair<size_t, size_t>& element) {
-	//				return element.second == i;
-	//			});
-	//		auto image_index = image_index_iter->first;
-
-	//		SDL_QueryTexture(m_images[image_index]->m_texture, &format, &access, &width, &height);
-	//		auto rtv = SDL_CreateTexture(m_renderer, format, SDL_TEXTUREACCESS_TARGET,
-	//			m_currentMapWidth * TILE_WIDTH,
-	//			m_currentMapHeight * TILE_HEIGHT);
-	//		SDL_SetRenderTarget(m_renderer, rtv);
-	//		if (i == 0) SDL_SetRenderDrawColor(m_renderer, 0xFF, 0xFF, 0xFF, 0xFF);
-	//		SDL_RenderClear(m_renderer);
-
-	//		for (const auto& tile : m_tileSet[i]) {
-	//			SDL_RenderCopy(m_renderer, m_images[image_index]->m_texture, &(tile->GetCurrentRect()),
-	//				&(tile->GetDestinationLocation()));
-	//		}
-
-	//		m_tileRtvs.emplace_back(rtv);
-	//		SDL_SetRenderTarget(m_renderer, nullptr);
-	//	}
-	//	m_tileRendered = true;
-	//	
-
-	//	/*for (const auto& tile : m_tiles) {
-
-	//		if (tile->GetDestinationLocation().x > cameraRect.x &&
-	//			tile->GetDestinationLocation().x < cameraRect.x + cameraRect.w &&
-	//			tile->GetDestinationLocation().y > cameraRect.y &&
-	//			tile->GetDestinationLocation().y < cameraRect.y + cameraRect.h) {
-	//			SDL_RenderCopy(m_renderer, m_images[0]->m_texture, &(tile->GetCurrentRect()),
-	//				&(tile->GetDestinationLocation()));
-	//		}
-
-	//		
-	//	}*/
-	//}
-	//else {
-	//	auto dst_rect = SDL_Rect();
-	//	dst_rect.x = 0;
-	//	dst_rect.y = 0;
-	//	//dst_rect.w = m_currentMapWidth * TILE_WIDTH;
-	//	//dst_rect.h = m_currentMapHeight * TILE_HEIGHT;
-	//	dst_rect.w = windowSurface->w;
-	//	dst_rect.h = windowSurface->h;
-	//	for (const auto& rtv : m_tileRtvs) {
-	//		SDL_RenderCopy(m_renderer, rtv, nullptr, &dst_rect);
-	//	}
-	//}
 }
 
 ecc::Tile* ecc::GameEngine::GetTile(const SDL_Rect& location) noexcept
@@ -434,6 +353,8 @@ void ecc::GameEngine::LoadMap(const std::string& mapName, const std::string& fil
 void ecc::GameEngine::LoadCharacter(const std::string& waitAnimationFileName,
 	const std::string& moveAnimationFileName,
 	const std::string& attackAnimationFileName,
+	const std::string& jumpAnimationFileName,
+	const std::string& fallAnimationFileName,
 	Character::CharacterFlag characterFlag,
 	int xPos, int yPos, float speed, ImageIndexFlag initialStatus)
 {
@@ -443,15 +364,19 @@ void ecc::GameEngine::LoadCharacter(const std::string& waitAnimationFileName,
 		m_father = std::make_unique<Character>(m_renderer,
 			waitAnimationFileName, moveAnimationFileName,
 			attackAnimationFileName,
+			jumpAnimationFileName,
+			fallAnimationFileName,
 			characterFlag,
-			xPos, yPos, speed, initialStatus);
+			xPos, yPos, speed, 1.25f, 0.25f, 1.0f, 1.0f, 1.0f, initialStatus);
 		break;
 	case ecc::Character::CharacterFlag::Daughter:
 		m_daughter = std::make_unique<Character>(m_renderer,
 			waitAnimationFileName, moveAnimationFileName,
 			attackAnimationFileName,
+			jumpAnimationFileName,
+			fallAnimationFileName,
 			characterFlag,
-			xPos, yPos, speed, initialStatus);
+			xPos, yPos, speed, 1.5f, 1.0f, 0.5f, 1.0f, 1.0f, initialStatus);
 		break;
 	default:
 		break;
@@ -473,58 +398,47 @@ void ecc::GameEngine::Clear(Uint8 r, Uint8 g, Uint8 b, Uint8 a)
 
 void ecc::GameEngine::Render(SDL_Surface* windowSurface, float scaleX, float scaleY)
 {
-	int camera_x_pos = 0;
-	int camera_y_pos = 0;
-	if (m_characterIndex == 0) {
-		camera_x_pos = (m_father->GetCurrentDestination().x + (CHARACTER_SPRITE_WIDTH / 2)) - (m_camera->GetCollisionBox().w / 2);
-		camera_y_pos = (m_father->GetCurrentDestination().y + (CHARACTER_SPRITE_HEIGHT / 2)) - (m_camera->GetCollisionBox().h / 2);
-	}
-	else {
-		camera_x_pos = (m_daughter->GetCurrentDestination().x + (CHARACTER_SPRITE_WIDTH / 2)) - (m_camera->GetCollisionBox().w / 2);
-		camera_y_pos = (m_daughter->GetCurrentDestination().y + (CHARACTER_SPRITE_HEIGHT / 2)) - (m_camera->GetCollisionBox().h / 2);
-	}
-	m_camera->SetCollisionBox(camera_x_pos, camera_y_pos, m_currentMapWidth * TILE_WIDTH, m_currentMapHeight * TILE_HEIGHT);
+	//int camera_x_pos = 0;
+	//int camera_y_pos = 0;
+	//if (m_characterIndex == 0) {
+	//	camera_x_pos = (m_father->GetCurrentDestination().x + (CHARACTER_SPRITE_WIDTH / 2)) - (m_camera->GetCollisionBox().w / 2);
+	//	camera_y_pos = (m_father->GetCurrentDestination().y + (CHARACTER_SPRITE_HEIGHT / 2)) - (m_camera->GetCollisionBox().h / 2);
+	//}
+	//else {
+	//	camera_x_pos = (m_daughter->GetCurrentDestination().x + (CHARACTER_SPRITE_WIDTH / 2)) - (m_camera->GetCollisionBox().w / 2);
+	//	camera_y_pos = (m_daughter->GetCurrentDestination().y + (CHARACTER_SPRITE_HEIGHT / 2)) - (m_camera->GetCollisionBox().h / 2);
+	//}
+	//m_camera->SetCollisionBox(camera_x_pos, camera_y_pos, m_currentMapWidth * TILE_WIDTH, m_currentMapHeight * TILE_HEIGHT);
 
-	if (!m_cameraRtv) {
-		Uint32 format = 0;
-		int access = 0;
-		int w = 0;
-		int h = 0;
-		SDL_QueryTexture(m_defaultRtv, &format, &access, &w, &h);
-		m_cameraRtv = SDL_CreateTexture(m_renderer, format, SDL_TEXTUREACCESS_TARGET,
-			m_camera->GetCollisionBox().w, m_camera->GetCollisionBox().h);
-	}
+	//if (!m_cameraRtv) {
+	//	Uint32 format = 0;
+	//	int access = 0;
+	//	int w = 0;
+	//	int h = 0;
+	//	SDL_QueryTexture(m_defaultRtv, &format, &access, &w, &h);
+	//	m_cameraRtv = SDL_CreateTexture(m_renderer, format, SDL_TEXTUREACCESS_TARGET,
+	//		m_camera->GetCollisionBox().w, m_camera->GetCollisionBox().h);
+	//}
 
-	//SDL_RenderSetScale(m_renderer, scaleX, scaleY);
-	RenderTiles(windowSurface, m_camera->GetCollisionBox());
-	//SDL_RenderCopy(m_renderer, m_tileRtv, nullptr, nullptr);
+	////SDL_RenderSetScale(m_renderer, scaleX, scaleY);
+	RenderTiles(windowSurface, { 0, 0, 0, 0 });
+	////SDL_RenderCopy(m_renderer, m_tileRtv, nullptr, nullptr);
 
-	SDL_SetRenderTarget(m_renderer, m_cameraRtv);
-	//SDL_RenderClear(m_renderer);
-	SDL_RenderCopy(m_renderer, m_tileRtv,
-		&(m_camera->GetCollisionBox()),
-		nullptr);
-	
-	/*for (auto i = 0; i < m_images.size(); ++i) {
-		if (m_images[i]->m_isTile)
-			continue;
+	//SDL_SetRenderTarget(m_renderer, m_cameraRtv);
+	////SDL_RenderClear(m_renderer);
+	//SDL_RenderCopy(m_renderer, m_tileRtv,
+	//	&(m_camera->GetCollisionBox()),
+	//	nullptr);
+	//
 
-		m_images[i]->Render(m_renderer);
-	}
-
-	for (const auto& object : m_objects) {
-		object->Render(m_renderer);
-	}*/
-
-	UpdateCharacters();
-
-	//SDL_SetRenderDrawColor(m_renderer, 0xFF, 0x00, 0x00, 0xFF);
-	//SDL_RenderDrawRect(m_renderer, &(m_camera->GetCollisionBox()));
-	//SDL_SetRenderDrawColor(m_renderer, 0xFF, 0xFF, 0xFF, 0xFF);
+	//for (const auto& object : m_objects) {
+	//	object->Render(m_renderer);
+	//}*/
 
 	SDL_SetRenderTarget(m_renderer, nullptr);
-	SDL_RenderCopy(m_renderer, m_cameraRtv, nullptr, nullptr);
-	
+	SDL_RenderCopy(m_renderer, m_tileRtv, nullptr, nullptr);
+
+	UpdateCharacters(0, 0, windowSurface);
 
 	//MoveEnemy();
 
@@ -569,19 +483,17 @@ void ecc::GameEngine::SwitchLight()
 	}
 }
 
-void ecc::GameEngine::SetCharacterIndex(unsigned short index)
+void ecc::GameEngine::SetCharacterIndex()
 {
-	if (m_characterIndex == 0 &&
-		m_daughter->GetCurrentStatus() == ImageIndexFlag::Idle) {
+	if (m_characterIndex == 0) {
 		m_characterIndex = 1;
-		m_father->SetStatus(ImageIndexFlag::Idle);
-		m_daughter->SetStatus(ImageIndexFlag::Moving);
+		m_father->SetStatus(CharacterStatusFlag::Incontrollable);
+		m_daughter->SetStatus(CharacterStatusFlag::Controllable);
 	}
-	else if (m_characterIndex == 1 &&
-		m_father->GetCurrentStatus() == ImageIndexFlag::Idle) {
+	else if (m_characterIndex == 1) {
 		m_characterIndex = 0;
-		m_father->SetStatus(ImageIndexFlag::Moving);
-		m_daughter->SetStatus(ImageIndexFlag::Idle);
+		m_father->SetStatus(CharacterStatusFlag::Controllable);
+		m_daughter->SetStatus(CharacterStatusFlag::Incontrollable);
 	}
 }
 

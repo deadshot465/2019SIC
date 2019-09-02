@@ -29,8 +29,8 @@ ecc::GameWindow::GameWindow(const std::string& title, int width, int height,
 	m_surface = SDL_GetWindowSurface(m_window);
 
 	m_graphicsEngine = std::make_unique<GameEngine>(m_window, m_surface);
-	m_graphicsEngine->LoadMap("map/Stage1_background.txt", "texture/Merged_background.png", m_surface);
-	m_graphicsEngine->LoadMap("map/Stage1_foreground.txt", "texture/Merged_foreground.png", m_surface);
+	m_graphicsEngine->LoadMap("map/Stage2_background.txt", "texture/Background_ver.2 (copy).png", m_surface);
+	m_graphicsEngine->LoadMap("map/Stage2_foreground.txt", "texture/Foreground_ver.2.0.png", m_surface);
 
 	m_graphicsEngine->LoadObject("texture/door_new.png",
 		MAX_MAP_X * TILE_WIDTH - (5 * TILE_WIDTH),
@@ -44,17 +44,20 @@ ecc::GameWindow::GameWindow(const std::string& title, int width, int height,
 	m_graphicsEngine->LoadCharacter("texture/vampire_idle.png",
 		"texture/vampire_run.png",
 		"texture/vampire_slash.png",
+		"texture/vampire_jump(rise).png",
+		"texture/vampire_jump(fall).png",
 		ecc::Character::CharacterFlag::Father,
-		15 * TILE_WIDTH,
-		MAX_MAP_Y * TILE_HEIGHT - TILE_HEIGHT - CHARACTER_SPRITE_HEIGHT, 5.0f,
-		ImageIndexFlag::Moving);
+		15 * (TILE_WIDTH * 2),
+		height - (TILE_HEIGHT * 2) - (CHARACTER_SPRITE_HEIGHT * 2), 15.0f);
 
 	m_graphicsEngine->LoadCharacter("texture/girl_idle.png",
 		"texture/girl_walk.png",
 		"texture/vampire_slash.png",
+		"texture/girl_jump(rise).png",
+		"texture/girl_jump(fall).png",
 		ecc::Character::CharacterFlag::Daughter,
-		5 * TILE_WIDTH,
-		MAX_MAP_Y * TILE_HEIGHT - TILE_HEIGHT - CHARACTER_SPRITE_HEIGHT, 2.5f);
+		5 * (TILE_WIDTH * 2),
+		height - (TILE_HEIGHT * 2) - (CHARACTER_SPRITE_HEIGHT * 2), 10.0f);
 
 	SDL_UpdateWindowSurface(m_window);
 	m_isInit = true;
@@ -86,9 +89,7 @@ void ecc::GameWindow::Broadcast()
 				break;
 			case SDLK_LSHIFT:
 			{
-				auto current_index = m_graphicsEngine->GetCharacterIndex();
-				unsigned short next_index = (current_index == 0) ? 1 : 0;
-				m_graphicsEngine->SetCharacterIndex(next_index);
+				m_graphicsEngine->SetCharacterIndex();
 				break;
 			}
 			default:

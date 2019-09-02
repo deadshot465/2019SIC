@@ -50,7 +50,7 @@ namespace ecc {
 		bool m_tileRendered = false;
 		unsigned short m_characterIndex = 0;
 
-		void UpdateCharacters();
+		void UpdateCharacters(int offsetX, int offsetY, SDL_Surface* windowSurface);
 		
 		void CreateTiles(size_t imageIndex, int totalWidth, int totalHeight,
 			SDL_Surface* windowSurface);
@@ -72,6 +72,8 @@ namespace ecc {
 		void LoadCharacter(const std::string& waitAnimationFileName,
 			const std::string& moveAnimationFileName,
 			const std::string& attackAnimationFileName,
+			const std::string& jumpAnimationFileName,
+			const std::string& fallAnimationFileName,
 			Character::CharacterFlag characterFlag,
 			int xPos = 0, int yPos = 0, float speed = 5.0f,
 			ImageIndexFlag initialStatus = ImageIndexFlag::Idle);
@@ -83,7 +85,7 @@ namespace ecc {
 		void Render(SDL_Surface* windowSurface, float scaleX, float scaleY);
 
 		void SwitchLight();
-		void SetCharacterIndex(unsigned short index);
+		void SetCharacterIndex();
 
 		unsigned short GetCharacterIndex() const noexcept;
 	};
