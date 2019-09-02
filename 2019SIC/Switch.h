@@ -18,4 +18,3 @@ namespace ecc {
 		int GetYRange() const noexcept;
 	};
 }
-

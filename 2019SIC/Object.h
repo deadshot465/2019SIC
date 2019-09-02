@@ -20,4 +20,3 @@ namespace ecc {
 		virtual const SDL_Rect& GetCurrentDestination() override;
 	};
 }
-

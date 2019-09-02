@@ -14,7 +14,6 @@
 #include "Tile.h"
 
 namespace ecc {
-
 	using TileCoordinatesSet = std::vector<std::vector<SDL_Rect>>;
 
 	class GameEngine
@@ -33,12 +32,12 @@ namespace ecc {
 		std::vector<std::unique_ptr<Enemy>> m_enemies;
 		std::vector<std::unique_ptr<Object>> m_objects;
 		std::vector<TileCoordinatesSet> m_tileCoordinates;
-		
+
 		std::vector<size_t> m_texCoordIndices;
 		std::vector<size_t> m_switchIndices;
 
 		std::map<size_t, size_t> m_tileCoordinateMapping;
-		
+
 		std::vector<int> m_map;
 		std::vector<std::vector<std::vector<int>>> m_maps;
 		int m_currentMapWidth = 0;
@@ -51,15 +50,15 @@ namespace ecc {
 		unsigned short m_characterIndex = 0;
 
 		void UpdateCharacters(int offsetX, int offsetY, SDL_Surface* windowSurface);
-		
+
 		void CreateTiles(size_t imageIndex, int totalWidth, int totalHeight,
 			SDL_Surface* windowSurface);
 		void RenderTiles(SDL_Surface* windowSurface, const SDL_Rect& cameraRect);
 		Tile* GetTile(const SDL_Rect& location) noexcept;
-		
+
 		int GetSingleDirectionMoveBound(const SDL_Rect& nextArea, int increment);
 		void GetEnemyMoveBounds(Enemy* enemy, int& leftBound, int& rightBound);
-		void MoveEnemy();
+		void MoveEnemy(SDL_Surface* windowSurface);
 	public:
 		GameEngine(SDL_Window* window, SDL_Surface* windowSurface);
 		~GameEngine();
@@ -79,7 +78,8 @@ namespace ecc {
 			ImageIndexFlag initialStatus = ImageIndexFlag::Idle);
 		void LoadEnemy(const std::string& waitAnimationFileName,
 			const std::string& moveAnimationFileName,
-			int xPos = 0, int yPos = 0, float speed = 40.0f);
+			const std::string& attackAnimationFileName,
+			int xPos, int yPos, float speed, int moveRange);
 
 		void Clear(Uint8 r, Uint8 g, Uint8 b, Uint8 a);
 		void Render(SDL_Surface* windowSurface, float scaleX, float scaleY);
@@ -90,4 +90,3 @@ namespace ecc {
 		unsigned short GetCharacterIndex() const noexcept;
 	};
 }
-

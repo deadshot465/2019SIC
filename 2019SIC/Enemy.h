@@ -9,21 +9,27 @@ namespace ecc {
 		public IAnimatable, public IMovable, public ICollidable, public IRenderable
 	{
 	private:
-		static const int m_enemyInitialSpeed = 1;
-		int m_enemyCurrentSpeed = 0;
+		int m_enemyRushSpeed = 0;
 		bool m_moveFinished = true;
-		int m_nextDestination = 0;
+		int m_nextDestination = 1;
+		int m_targetDestination = 0;
+		int m_enemyMoveRange = 0;
+		int m_originalX = 0;
+		ImageIndexFlag m_currentImageIndex = ImageIndexFlag::Idle;
 
 	public:
 		Enemy(SDL_Renderer* renderer,
 			const std::string& waitAnimationFileName,
 			const std::string& moveAnimationFileName,
-			int xPos, int yPos, float speed);
+			const std::string& attackAnimationFileName,
+			int xPos, int yPos, float speed,
+			float idleSpeed, float moveSpeed, float attackSpeed,
+			int moveRange);
 		~Enemy();
 
 		// IMovable ÇâÓÇµÇƒåpè≥Ç≥ÇÍÇ‹ÇµÇΩ
 		virtual void Move() override;
-		void Move(int nextDestination);
+		void Move(const SDL_Rect& playerPosition, bool foundPlayer, SDL_Surface* windowSurface);
 		void Attack();
 
 		// ICollidable ÇâÓÇµÇƒåpè≥Ç≥ÇÍÇ‹ÇµÇΩ
@@ -42,4 +48,3 @@ namespace ecc {
 		bool IsMoveFinished() const noexcept;
 	};
 }
-

@@ -10,4 +10,3 @@ namespace ecc {
 		virtual void Move() = 0;
 	};
 }
-

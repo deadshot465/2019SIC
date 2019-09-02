@@ -4,7 +4,6 @@
 #include "Helper.h"
 
 namespace ecc {
-
 	class Character;
 	class Enemy;
 	class GameEngine;
@@ -35,7 +34,6 @@ namespace ecc {
 		void SetTexCoord(int x, int y) noexcept;
 
 		void Render(SDL_Renderer* renderer, SDL_RendererFlip flipMode = SDL_FLIP_NONE, double angle = 0.0,
-			const SDL_Point* center = nullptr, int offsetX = 0, int offsetY = 0);
+			const SDL_Point * center = nullptr, int offsetX = 0, int offsetY = 0);
 	};
 }
-

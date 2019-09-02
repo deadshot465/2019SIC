@@ -8,7 +8,6 @@
 #include <type_traits>
 
 namespace ecc {
-
 	constexpr int TILE_WIDTH = 16;
 	constexpr int TILE_HEIGHT = 16;
 	constexpr int CHARACTER_SPRITE_WIDTH = 64;
@@ -16,7 +15,7 @@ namespace ecc {
 	constexpr int CHARACTER_ATTACK_SPRITE_WIDTH = 80;
 	constexpr int CHARACTER_ATTACK_SPRITE_HEIGHT = 64;
 	constexpr int ENEMY_SPRITE_OFFSET = 3;
-	
+
 	constexpr int MAX_MAP_X = 32;
 	constexpr int MAX_MAP_Y = 16;
 	constexpr int MAP_WIDTH = MAX_MAP_X * TILE_WIDTH;

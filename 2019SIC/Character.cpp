@@ -13,15 +13,14 @@ ecc::Character::Character(SDL_Renderer* renderer,
 	int xPos, int yPos, float speed,
 	float idleSpeed, float moveSpeed, float attackSpeed, float jumpSpeed, float fallSpeed,
 	ImageIndexFlag initialStatus) :
-	m_currentImageIndex(initialStatus), m_characterFlag(characterFlag),
-	m_startTime(std::chrono::high_resolution_clock::now())
+	m_currentImageIndex(initialStatus), m_characterFlag(characterFlag)
 {
 	m_images.resize(MAX_ANIMATION_COUNT);
 	m_frameCounts.resize(MAX_ANIMATION_COUNT);
 	m_animationSpeeds.resize(MAX_ANIMATION_COUNT);
 
 	m_images[0] = std::make_unique<Image>();
-	m_images[0]->LoadImage(renderer, waitAnimationFileName, true, xPos, yPos, false, 
+	m_images[0]->LoadImage(renderer, waitAnimationFileName, true, xPos, yPos, false,
 		ImageIndexFlag::Idle);
 	m_images[1] = std::make_unique<Image>();
 	m_images[1]->LoadImage(renderer, moveAnimationFileName, true, xPos, yPos, false,
@@ -49,6 +48,7 @@ ecc::Character::Character(SDL_Renderer* renderer,
 	m_animationSpeeds[4] = fallSpeed;
 
 	m_speed = speed;
+	m_startTime = std::chrono::high_resolution_clock::now();
 
 	if (characterFlag == CharacterFlag::Father) {
 		m_statusFlag = CharacterStatusFlag::Controllable;
@@ -76,7 +76,6 @@ void ecc::Character::Move(SDL_Surface* windowSurface)
 	auto current_key_states = SDL_GetKeyboardState(nullptr);
 
 	if (current_key_states[SDL_SCANCODE_D]) {
-
 		m_flipMode = SDL_FLIP_NONE;
 
 		if (!m_animationStarted && !m_jumpStarted) {
@@ -94,7 +93,6 @@ void ecc::Character::Move(SDL_Surface* windowSurface)
 	}
 
 	if (current_key_states[SDL_SCANCODE_A]) {
-
 		m_flipMode = SDL_FLIP_HORIZONTAL;
 
 		if (!m_animationStarted && !m_jumpStarted) {
@@ -153,7 +151,6 @@ void ecc::Character::Animate(float speedFactor)
 	}
 
 	if (elapsed_time > frame_duration) {
-
 		switch (m_currentImageIndex)
 		{
 		case ecc::ImageIndexFlag::Idle:
@@ -172,7 +169,6 @@ void ecc::Character::Animate(float speedFactor)
 		if (m_animationStarted) ++m_animationTimer;
 
 		if (m_currentFrame >= m_frameCounts[static_cast<size_t>(m_currentImageIndex)]) {
-			
 			if (m_animationStarted) {
 				m_animationTimer = 0;
 				m_animationStarted = false;
@@ -181,7 +177,7 @@ void ecc::Character::Animate(float speedFactor)
 					!key_state[SDL_SCANCODE_A])
 					m_currentImageIndex = ImageIndexFlag::Idle;
 			}
-			
+
 			m_currentFrame = 0;
 		}
 
@@ -190,7 +186,6 @@ void ecc::Character::Animate(float speedFactor)
 
 	m_images[static_cast<size_t>(m_currentImageIndex)]
 		->SetTexCoord(m_currentXPos, m_images[static_cast<size_t>(m_currentImageIndex)]->m_texCoord.y);
-
 }
 
 void ecc::Character::SetCollisionBox()
@@ -226,12 +221,11 @@ void ecc::Character::Jump()
 	}
 
 	if (m_jumpStarted) {
-
 		if (m_jumpTimer <= 0) {
 			m_currentImageIndex = ImageIndexFlag::Fall;
 			m_fallStarted = true;
 		}
-			
+
 		for (auto& image : m_images) {
 			image->MoveDestinationLocation(0, m_fallStarted ? m_jumpSpeed : -m_jumpSpeed);
 		}
@@ -243,5 +237,4 @@ void ecc::Character::Jump()
 			m_currentImageIndex = ImageIndexFlag::Idle;
 		}
 	}
-
 }

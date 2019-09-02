@@ -32,7 +32,6 @@ void ecc::Image::LoadImage(SDL_Renderer* renderer, const std::string& fileName,
 
 ecc::Image::Image()
 {
-	
 }
 
 ecc::Image::~Image()
@@ -53,7 +52,7 @@ void ecc::Image::SetTexCoord(int x, int y) noexcept
 }
 
 void ecc::Image::Render(SDL_Renderer* renderer, SDL_RendererFlip flipMode, double angle,
-	const SDL_Point * center, int offsetX, int offsetY)
+	const SDL_Point* center, int offsetX, int offsetY)
 {
 	auto dst_rect = m_destinationLocation;
 	dst_rect.x -= offsetX;

@@ -4,7 +4,6 @@
 ecc::Tile::Tile(const SDL_Rect& texCoordOn, const SDL_Rect& texCoordOff, const SDL_Rect& destLocation, ecc::TileType tileType, bool isLit) :
 	m_texCoordOn(texCoordOn), m_texCoordOff(texCoordOff), m_destLocation(destLocation), m_tileType(tileType), m_lit(isLit)
 {
-	
 }
 
 ecc::Tile::~Tile()

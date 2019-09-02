@@ -17,7 +17,6 @@ void ecc::Camera::Move()
 
 void ecc::Camera::SetCollisionBox()
 {
-	
 }
 
 void ecc::Camera::SetCollisionBox(int xLocation, int yLocation, int maxX, int maxY)

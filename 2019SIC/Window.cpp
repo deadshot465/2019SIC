@@ -25,7 +25,7 @@ ecc::GameWindow::GameWindow(const std::string& title, int width, int height,
 
 	m_scaleX = static_cast<float>(width) / MAP_WIDTH;
 	m_scaleY = static_cast<float>(height) / MAP_HEIGHT;
-	
+
 	m_surface = SDL_GetWindowSurface(m_window);
 
 	m_graphicsEngine = std::make_unique<GameEngine>(m_window, m_surface);
@@ -36,10 +36,11 @@ ecc::GameWindow::GameWindow(const std::string& title, int width, int height,
 		MAX_MAP_X * TILE_WIDTH - (5 * TILE_WIDTH),
 		MAX_MAP_Y * TILE_HEIGHT - (5 * TILE_HEIGHT));
 
-	m_graphicsEngine->LoadEnemy("texture/vampire_enemy.png",
-		"texture/vampire_enemy.png",
-		25 * TILE_WIDTH,
-		MAX_MAP_Y * TILE_HEIGHT - TILE_HEIGHT - CHARACTER_SPRITE_HEIGHT);
+	m_graphicsEngine->LoadEnemy("texture/vampire_enemy_idle.png",
+		"texture/vampire_enemy_walk.png",
+		"texture/vampire_enemy_run.png",
+		25 * (TILE_WIDTH * 2),
+		height - (TILE_HEIGHT * 2) - (CHARACTER_SPRITE_HEIGHT * 2), 2.5f, 3);
 
 	m_graphicsEngine->LoadCharacter("texture/vampire_idle.png",
 		"texture/vampire_run.png",
@@ -97,7 +98,6 @@ void ecc::GameWindow::Broadcast()
 			}
 		}
 		}
-
 	}
 
 	m_graphicsEngine->Clear(0xFF, 0xFF, 0xFF, 0xFF);

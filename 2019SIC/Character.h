@@ -56,13 +56,8 @@ namespace ecc {
 		ImageIndexFlag m_currentImageIndex = ImageIndexFlag::Idle;
 		CharacterFlag m_characterFlag = {};
 
-		std::chrono::steady_clock::time_point m_startTime;
-		std::chrono::steady_clock::time_point m_currentTime;
-		unsigned int m_currentFrame = 0;
-		unsigned int m_currentXPos = 0;
 		bool m_animationStarted = false;
 		unsigned int m_animationTimer = 0;
-		std::vector<float> m_animationSpeeds;
 
 		int m_jumpTimer = 1.0;
 		int m_jumpSpeed = 32;
@@ -71,4 +66,3 @@ namespace ecc {
 		bool m_fallStarted = false;
 	};
 }
-

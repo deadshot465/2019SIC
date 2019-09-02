@@ -20,4 +20,3 @@ namespace ecc {
 		virtual void SetCollisionBox(int xLocation, int yLocation, int maxX, int maxY);
 	};
 }
-

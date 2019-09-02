@@ -14,4 +14,3 @@ namespace ecc {
 		const SDL_Rect& GetCollisionBox() const noexcept;
 	};
 }
-

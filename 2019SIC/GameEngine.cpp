@@ -75,11 +75,10 @@ void ecc::GameEngine::CreateTiles(size_t imageIndex, int totalWidth, int totalHe
 	for (const auto& row : m_maps[imageIndex]) {
 		for (const auto& column : row) {
 			for (auto current_row = static_cast<int64_t>(total_rows) - 2ll; current_row >= 0ll; current_row -= 2ll) {
-
 				auto offset = current_row * total_columns;
 				if (column < offset) continue;
 
-				if (column > offset + total_columns) {
+				if (column >= offset + total_columns) {
 					src_rect_off = tex_coord[current_row + 1ll][column % total_columns];
 					src_rect_on = tex_coord[current_row][column % total_columns];
 					is_lit = false;
@@ -160,7 +159,6 @@ void ecc::GameEngine::RenderTiles(SDL_Surface* windowSurface, const SDL_Rect& ca
 	SDL_RenderClear(m_renderer);
 
 	for (size_t i = 0; i < m_tileSet.size(); ++i) {
-		
 		auto image_index_iter = std::find_if(m_tileCoordinateMapping.cbegin(),
 			m_tileCoordinateMapping.cend(), [&i](const std::pair<size_t, size_t>& element) {
 				return element.second == i;
@@ -171,7 +169,6 @@ void ecc::GameEngine::RenderTiles(SDL_Surface* windowSurface, const SDL_Rect& ca
 			SDL_RenderCopy(m_renderer, m_images[image_index]->m_texture, &(tile->GetCurrentRect()),
 				&(tile->GetDestinationLocation()));
 		}
-
 	}
 	SDL_SetRenderTarget(m_renderer, nullptr);
 }
@@ -192,7 +189,7 @@ int ecc::GameEngine::GetSingleDirectionMoveBound(const SDL_Rect& nextArea, int i
 {
 	if (GetTile(nextArea)->IsLit())
 		return nextArea.x;
-	
+
 	auto rect = SDL_Rect();
 	rect.x = nextArea.x + increment;
 	rect.y = nextArea.y;
@@ -221,22 +218,13 @@ void ecc::GameEngine::GetEnemyMoveBounds(Enemy* enemy, int& leftBound, int& righ
 	rightBound -= ENEMY_SPRITE_OFFSET;
 }
 
-void ecc::GameEngine::MoveEnemy()
+void ecc::GameEngine::MoveEnemy(SDL_Surface* windowSurface)
 {
 	static int next_destination = 0;
 
 	for (auto& enemy : m_enemies) {
-		if (enemy->IsMoveFinished()) {
-			int left_bound = 0;
-			int right_bound = 0;
-			GetEnemyMoveBounds(enemy.get(), left_bound, right_bound);
-
-			while (next_destination == 0)
-				next_destination = GetRandomInt(left_bound, right_bound);
-
-			enemy->StartMove();
-		}
-		enemy->Move(next_destination);
+		enemy->Move(m_characterIndex == 0 ? m_father->GetCurrentDestination() :
+			m_daughter->GetCurrentDestination(), false, windowSurface);
 		enemy->Render(m_renderer);
 	}
 }
@@ -274,7 +262,6 @@ void ecc::GameEngine::LoadImage(const std::string& fileName,
 		m_tileCoordinates.emplace_back(coordinates);
 		CreateTiles(index, iter->get()->m_width, iter->get()->m_height, windowSurface);
 	}
-
 }
 
 void ecc::GameEngine::LoadObject(const std::string& fileName, int xPos, int yPos)
@@ -305,7 +292,7 @@ void ecc::GameEngine::LoadMap(const std::string& mapName, const std::string& fil
 			do {
 				int x = 0;
 				ss >> x;
-				
+
 				if (ss.fail()) {
 					ss.clear();
 					long long location = ss.tellg();
@@ -318,9 +305,8 @@ void ecc::GameEngine::LoadMap(const std::string& mapName, const std::string& fil
 				if (ss.eof()) {
 					break;
 				}
-				
 			} while (!ss.fail());
-			
+
 			if (fs.fail()) {
 				if (buffer[0] == '\0') {
 					fs.setstate(std::ios_base::eofbit);
@@ -338,9 +324,7 @@ void ecc::GameEngine::LoadMap(const std::string& mapName, const std::string& fil
 
 			if (fs.eof())
 				break;
-			
 		} while (!fs.fail());
-			
 	}
 
 	fs.close();
@@ -381,13 +365,17 @@ void ecc::GameEngine::LoadCharacter(const std::string& waitAnimationFileName,
 	default:
 		break;
 	}
-
 }
 
-void ecc::GameEngine::LoadEnemy(const std::string& waitAnimationFileName, const std::string& moveAnimationFileName, int xPos, int yPos, float speed)
+void ecc::GameEngine::LoadEnemy(const std::string& waitAnimationFileName,
+	const std::string& moveAnimationFileName,
+	const std::string& attackAnimationFileName,
+	int xPos, int yPos, float speed, int moveRange)
 {
 	m_enemies.emplace_back(std::make_unique<Enemy>(m_renderer,
-		waitAnimationFileName, moveAnimationFileName, xPos, yPos, speed));
+		waitAnimationFileName, moveAnimationFileName,
+		attackAnimationFileName,
+		xPos, yPos, speed, 4.5, 3.0, 0.45, moveRange));
 }
 
 void ecc::GameEngine::Clear(Uint8 r, Uint8 g, Uint8 b, Uint8 a)
@@ -440,7 +428,7 @@ void ecc::GameEngine::Render(SDL_Surface* windowSurface, float scaleX, float sca
 
 	UpdateCharacters(0, 0, windowSurface);
 
-	//MoveEnemy();
+	MoveEnemy(windowSurface);
 
 	SDL_RenderPresent(m_renderer);
 }
@@ -463,7 +451,7 @@ void ecc::GameEngine::SwitchLight()
 				location.y + TILE_HEIGHT * i,
 				TILE_WIDTH,
 				TILE_HEIGHT });
-			
+
 			for (int j = x_range; j > 0; --j) {
 				target_x_left = GetTile({
 					location.x - TILE_WIDTH * j,
