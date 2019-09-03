@@ -10,7 +10,8 @@
 #include "Enemy.h"
 #include "Helper.h"
 #include "Image.h"
-#include "Object.h"
+#include "ObjectFactory.h"
+#include "SwitchableWindow.h"
 #include "Tile.h"
 
 namespace ecc {
@@ -30,7 +31,7 @@ namespace ecc {
 		std::unique_ptr<Character> m_father = nullptr;
 		std::unique_ptr<Character> m_daughter = nullptr;
 		std::vector<std::unique_ptr<Enemy>> m_enemies;
-		std::vector<std::unique_ptr<Object>> m_objects;
+		std::unique_ptr<ObjectFactory> m_objectFactory = nullptr;
 		std::vector<TileCoordinatesSet> m_tileCoordinates;
 
 		std::vector<size_t> m_texCoordIndices;
@@ -49,16 +50,23 @@ namespace ecc {
 		bool m_tileRendered = false;
 		unsigned short m_characterIndex = 0;
 
+		std::vector<std::unique_ptr<SwitchableWindow>> m_switchableWindows;
+
 		void UpdateCharacters(int offsetX, int offsetY, SDL_Surface* windowSurface);
 
 		void CreateTiles(size_t imageIndex, int totalWidth, int totalHeight,
 			SDL_Surface* windowSurface);
 		void RenderTiles(SDL_Surface* windowSurface, const SDL_Rect& cameraRect);
-		Tile* GetTile(const SDL_Rect& location) noexcept;
+		Tile* GetBackgroundTile(const SDL_Rect& location) noexcept;
+		Tile* GetForegroundTile(const SDL_Rect& location) noexcept;
+		bool CheckMovableBetween(const SDL_Rect& src, const SDL_Rect& target, int increment = TILE_WIDTH * 2);
 
 		int GetSingleDirectionMoveBound(const SDL_Rect& nextArea, int increment);
 		void GetEnemyMoveBounds(Enemy* enemy, int& leftBound, int& rightBound);
 		void MoveEnemy(SDL_Surface* windowSurface);
+		
+		void GenerateWindows();
+		void GenerateKeyAndDoors();
 	public:
 		GameEngine(SDL_Window* window, SDL_Surface* windowSurface);
 		~GameEngine();

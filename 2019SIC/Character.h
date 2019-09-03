@@ -15,7 +15,7 @@ namespace ecc {
 	{
 	public:
 
-		static enum class CharacterFlag {
+		enum class CharacterFlag {
 			Father,
 			Daughter
 		};
@@ -59,7 +59,7 @@ namespace ecc {
 		bool m_animationStarted = false;
 		unsigned int m_animationTimer = 0;
 
-		int m_jumpTimer = 1.0;
+		int m_jumpTimer = 10;
 		int m_jumpSpeed = 32;
 		bool m_jumpStarted = false;
 		int m_jumpStartedYCoordinate = 0;

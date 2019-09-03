@@ -42,9 +42,6 @@
     <ClCompile Include="ICollidable.cpp">
       <Filter>來源檔案</Filter>
     </ClCompile>
-    <ClCompile Include="Object.cpp">
-      <Filter>來源檔案</Filter>
-    </ClCompile>
     <ClCompile Include="Camera.cpp">
       <Filter>來源檔案</Filter>
     </ClCompile>
@@ -55,6 +52,15 @@
       <Filter>來源檔案</Filter>
     </ClCompile>
     <ClCompile Include="IRenderable.cpp">
+      <Filter>來源檔案</Filter>
+    </ClCompile>
+    <ClCompile Include="ObjectFactory.cpp">
+      <Filter>來源檔案</Filter>
+    </ClCompile>
+    <ClCompile Include="SwitchableWindow.cpp">
+      <Filter>來源檔案</Filter>
+    </ClCompile>
+    <ClCompile Include="Key.cpp">
       <Filter>來源檔案</Filter>
     </ClCompile>
   </ItemGroup>
@@ -86,9 +92,6 @@
     <ClInclude Include="ICollidable.h">
       <Filter>標頭檔</Filter>
     </ClInclude>
-    <ClInclude Include="Object.h">
-      <Filter>標頭檔</Filter>
-    </ClInclude>
     <ClInclude Include="Camera.h">
       <Filter>標頭檔</Filter>
     </ClInclude>
@@ -99,6 +102,15 @@
       <Filter>標頭檔</Filter>
     </ClInclude>
     <ClInclude Include="IRenderable.h">
+      <Filter>標頭檔</Filter>
+    </ClInclude>
+    <ClInclude Include="ObjectFactory.h">
+      <Filter>標頭檔</Filter>
+    </ClInclude>
+    <ClInclude Include="SwitchableWindow.h">
+      <Filter>標頭檔</Filter>
+    </ClInclude>
+    <ClInclude Include="Key.h">
       <Filter>標頭檔</Filter>
     </ClInclude>
   </ItemGroup>

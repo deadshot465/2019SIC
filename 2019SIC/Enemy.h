@@ -9,7 +9,7 @@ namespace ecc {
 		public IAnimatable, public IMovable, public ICollidable, public IRenderable
 	{
 	private:
-		int m_enemyRushSpeed = 0;
+		float m_enemyRushSpeed = 0.0f;
 		bool m_moveFinished = true;
 		int m_nextDestination = 1;
 		int m_targetDestination = 0;
@@ -23,7 +23,7 @@ namespace ecc {
 			const std::string& moveAnimationFileName,
 			const std::string& attackAnimationFileName,
 			int xPos, int yPos, float speed,
-			float idleSpeed, float moveSpeed, float attackSpeed,
+			double idleSpeed, double moveSpeed, double attackSpeed,
 			int moveRange);
 		~Enemy();
 

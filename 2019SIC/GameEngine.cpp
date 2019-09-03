@@ -50,10 +50,10 @@ void ecc::GameEngine::UpdateCharacters(int offsetX, int offsetY, SDL_Surface* wi
 	m_daughter->Render(m_renderer, offsetX,
 		offsetY, 0.0f);
 
-	for (const auto& object : m_objects) {
+	/*for (const auto& object : m_objects) {
 		auto res_1 = m_father->CheckCollision(object->GetCollisionBox());
 		auto res_2 = m_daughter->CheckCollision(object->GetCollisionBox());
-	}
+	}*/
 }
 
 void ecc::GameEngine::CreateTiles(size_t imageIndex, int totalWidth, int totalHeight,
@@ -106,42 +106,6 @@ void ecc::GameEngine::CreateTiles(size_t imageIndex, int totalWidth, int totalHe
 	y = 0;
 	m_tileSet.emplace_back(tiles);
 
-	/*for (auto j = 0; j < m_currentMapHeight; ++j) {
-		for (auto k = 0; k < m_currentMapWidth; ++k) {
-			auto tile = m_map[j * m_currentMapWidth + k];
-
-			if (tile < MAX_TILE_COUNT_X) {
-				src_rect_on = tex_coord[0][tile];
-				src_rect_off = tex_coord[1][tile];
-				is_lit = true;
-			}
-			else {
-				src_rect_on = tex_coord[0][tile - MAX_TILE_COUNT_X];
-				src_rect_off = tex_coord[1][tile - MAX_TILE_COUNT_X];
-				is_lit = false;
-			}
-
-			dst_rect.x = k * TILE_WIDTH;
-			dst_rect.y = j * TILE_HEIGHT;
-			dst_rect.w = TILE_WIDTH;
-			dst_rect.h = TILE_HEIGHT;
-
-			TileType type = (tile == 5) ? TileType::Switch : TileType::Normal;
-
-			switch (type) {
-			case TileType::Normal:
-				m_tiles.emplace_back(std::make_unique<Tile>(src_rect_on, src_rect_off, dst_rect, type, is_lit));
-				break;
-			case TileType::Switch:
-			{
-				m_switchIndices.emplace_back(m_tiles.size());
-				m_tiles.emplace_back(std::make_unique<Switch>(src_rect_on, src_rect_off, dst_rect,
-					type, is_lit, 3, 8));
-				break;
-			}
-			}
-		}
-	}*/
 }
 
 void ecc::GameEngine::RenderTiles(SDL_Surface* windowSurface, const SDL_Rect& cameraRect)
@@ -173,9 +137,9 @@ void ecc::GameEngine::RenderTiles(SDL_Surface* windowSurface, const SDL_Rect& ca
 	SDL_SetRenderTarget(m_renderer, nullptr);
 }
 
-ecc::Tile* ecc::GameEngine::GetTile(const SDL_Rect& location) noexcept
+ecc::Tile* ecc::GameEngine::GetBackgroundTile(const SDL_Rect& location) noexcept
 {
-	for (const auto& tile : m_tiles) {
+	for (const auto& tile : m_tileSet[0]) {
 		if (tile->GetDestinationLocation().x == location.x &&
 			tile->GetDestinationLocation().y == location.y) {
 			return tile.get();
@@ -185,9 +149,47 @@ ecc::Tile* ecc::GameEngine::GetTile(const SDL_Rect& location) noexcept
 	return nullptr;
 }
 
+ecc::Tile* ecc::GameEngine::GetForegroundTile(const SDL_Rect& location) noexcept
+{
+	for (const auto& tile : m_tileSet[1]) {
+		if (tile->GetDestinationLocation().x == location.x &&
+			tile->GetDestinationLocation().y == location.y) {
+			return tile.get();
+		}
+	}
+
+	return nullptr;
+}
+
+bool ecc::GameEngine::CheckMovableBetween(const SDL_Rect& src, const SDL_Rect& target, int increment)
+{
+	if (src.y != target.y) return false;
+	if (src.x == target.x) return true;
+
+	if (src.x < target.x) {
+		for (auto i = src.x + increment; i < target.x; i += increment) {
+			SDL_Rect tile = { i, src.y, increment * 2, increment * 2 };
+			auto tile_ptr = GetBackgroundTile(tile);
+			if (!tile_ptr) return false;
+			if (tile_ptr->IsLit())
+				return false;
+		}
+	}
+	else {
+		for (auto i = src.x - increment; i > target.x; i -= increment) {
+			SDL_Rect tile = { i, src.y, increment, increment };
+			auto tile_ptr = GetBackgroundTile(tile);
+			if (!tile_ptr) return false;
+			if (tile_ptr->IsLit())
+				return false;
+		}
+	}
+	return true;
+}
+
 int ecc::GameEngine::GetSingleDirectionMoveBound(const SDL_Rect& nextArea, int increment)
 {
-	if (GetTile(nextArea)->IsLit())
+	if (GetBackgroundTile(nextArea)->IsLit())
 		return nextArea.x;
 
 	auto rect = SDL_Rect();
@@ -220,13 +222,84 @@ void ecc::GameEngine::GetEnemyMoveBounds(Enemy* enemy, int& leftBound, int& righ
 
 void ecc::GameEngine::MoveEnemy(SDL_Surface* windowSurface)
 {
-	static int next_destination = 0;
-
 	for (auto& enemy : m_enemies) {
+		/*std::cout << "Movable Between: " << std::boolalpha << CheckMovableBetween(enemy->GetCurrentDestination(),
+			(m_characterIndex == 0) ? m_father->GetCurrentDestination() : m_daughter->GetCurrentDestination()) << "\n";*/
 		enemy->Move(m_characterIndex == 0 ? m_father->GetCurrentDestination() :
 			m_daughter->GetCurrentDestination(), false, windowSurface);
 		enemy->Render(m_renderer);
 	}
+}
+
+void ecc::GameEngine::GenerateWindows()
+{
+	int x_offset = 2 * 2 * TILE_WIDTH;
+	int y_offset = 3 * 2 * TILE_HEIGHT;
+	static bool window_generated = false;
+	int j = 0;
+
+	m_objectFactory->CreateWindow(m_renderer, ObjectList::Window3Closed, 64, 96);
+	//m_objectFactory->CreateWindow(m_renderer, ObjectList::Window3Open, 272, 96);
+	//m_objectFactory->CreateWindow(m_renderer, ObjectList::Window3Open, 528, 96);
+	//m_objectFactory->CreateWindow(m_renderer, ObjectList::Window3Closed, 736, 96);
+	//m_objectFactory->CreateWindow(m_renderer, ObjectList::Window3Open, 944, 96);
+	if (!window_generated) {
+		m_switchableWindows.emplace_back(std::make_unique<SwitchableWindow>(ObjectList::Window3Open, ObjectList::Window3Closed, 288, 96, 2, 2, true, 0));
+		m_switchableWindows.emplace_back(std::make_unique<SwitchableWindow>(ObjectList::Window3Open, ObjectList::Window3Closed, 544, 96, 2, 2, false, 0));
+		m_switchableWindows.emplace_back(std::make_unique<SwitchableWindow>(ObjectList::Window3Open, ObjectList::Window3Closed, 736, 96, 2, 2, false, 0));
+		m_switchableWindows.emplace_back(std::make_unique<SwitchableWindow>(ObjectList::Window3Open, ObjectList::Window3Closed, 960, 96, 2, 2, true, 0));
+		window_generated = true;
+	}
+	else {
+		for (const auto& window : m_switchableWindows) {
+			window->Render(m_renderer, m_objectFactory.get());
+		}
+	}
+
+	m_objectFactory->CreateWindow(m_renderer, ObjectList::Window3Open, 64, 416);
+	m_objectFactory->CreateWindow(m_renderer, ObjectList::Window1Open, 704, 448);
+	m_objectFactory->CreateWindow(m_renderer, ObjectList::Window1Open, 832, 448);
+	m_objectFactory->CreateWindow(m_renderer, ObjectList::Window1Open, 960, 448);
+	m_objectFactory->CreateWindow(m_renderer, ObjectList::Window1Open, 1088, 448);
+	m_objectFactory->CreateWindow(m_renderer, ObjectList::Window1Open, 1216, 448);
+
+	//for (auto i = 0; i < 9; ++i, x_offset += 9 * TILE_WIDTH) {
+	//	if (i >= 2 && i <= 5) {
+	//		//m_objectFactory->CreateWindow(m_renderer, ObjectList::Window3Open, x_offset, y_offset);
+	//		if (!window_generated) {
+	//			m_switchableWindows.emplace_back(std::make_unique<SwitchableWindow>(ObjectList::Window3Open, ObjectList::Window3Closed, x_offset, y_offset,
+	//				2, 2, (i % 2 == 0) ? true : false, 0));
+	//		}
+	//		else {
+	//			m_switchableWindows[j++]->Render(m_renderer, m_objectFactory.get());
+	//		}
+	//	}
+	//	else {
+	//		m_objectFactory->CreateWindow(m_renderer, ObjectList::Window3Closed, x_offset, y_offset);
+	//	}
+	//}
+	//window_generated = true;
+
+	//x_offset = 2 * 2 * TILE_WIDTH;
+	//y_offset = 13 * 2 * TILE_HEIGHT;
+
+	//m_objectFactory->CreateWindow(m_renderer, ObjectList::Window3Closed, x_offset, y_offset);
+	//x_offset += 9 * TILE_WIDTH;
+	//m_objectFactory->CreateWindow(m_renderer, ObjectList::Window3Closed, x_offset, y_offset);
+	//x_offset += 18 * TILE_WIDTH;
+	//for (auto i = 0; i < 7; ++i, x_offset += 9 * TILE_WIDTH) {
+	//	if (i == 4 || i == 6) {
+	//		m_objectFactory->CreateWindow(m_renderer, ObjectList::Window1Open, x_offset, y_offset);
+	//	}
+	//	else {
+	//		m_objectFactory->CreateWindow(m_renderer, ObjectList::Window1Closed, x_offset, y_offset);
+	//	}
+	//}
+}
+
+void ecc::GameEngine::GenerateKeyAndDoors()
+{
+	
 }
 
 ecc::GameEngine::GameEngine(SDL_Window* window, SDL_Surface* windowSurface)
@@ -235,6 +308,7 @@ ecc::GameEngine::GameEngine(SDL_Window* window, SDL_Surface* windowSurface)
 	m_renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED);
 	m_defaultRtv = SDL_GetRenderTarget(m_renderer);
 	m_camera = std::make_unique<Camera>(windowSurface);
+	m_objectFactory = std::make_unique<ObjectFactory>(m_renderer);
 }
 
 ecc::GameEngine::~GameEngine()
@@ -266,7 +340,7 @@ void ecc::GameEngine::LoadImage(const std::string& fileName,
 
 void ecc::GameEngine::LoadObject(const std::string& fileName, int xPos, int yPos)
 {
-	m_objects.emplace_back(std::make_unique<Object>(m_renderer, fileName, xPos, yPos));
+	//m_objects.emplace_back(std::make_unique<ObjectFactory>(m_renderer, fileName, xPos, yPos));
 }
 
 void ecc::GameEngine::LoadMap(const std::string& mapName, const std::string& fileName,
@@ -329,8 +403,8 @@ void ecc::GameEngine::LoadMap(const std::string& mapName, const std::string& fil
 
 	fs.close();
 	m_maps.emplace_back(number_array);
-	m_currentMapWidth = number_array[0].size();
-	m_currentMapHeight = number_array.size();
+	m_currentMapWidth = static_cast<int>(number_array[0].size());
+	m_currentMapHeight = static_cast<int>(number_array.size());
 	LoadImage(fileName, windowSurface, true);
 }
 
@@ -426,6 +500,8 @@ void ecc::GameEngine::Render(SDL_Surface* windowSurface, float scaleX, float sca
 	SDL_SetRenderTarget(m_renderer, nullptr);
 	SDL_RenderCopy(m_renderer, m_tileRtv, nullptr, nullptr);
 
+	GenerateWindows();
+
 	UpdateCharacters(0, 0, windowSurface);
 
 	MoveEnemy(windowSurface);
@@ -435,7 +511,121 @@ void ecc::GameEngine::Render(SDL_Surface* windowSurface, float scaleX, float sca
 
 void ecc::GameEngine::SwitchLight()
 {
-	for (const auto& index : m_switchIndices) {
+	for (const auto& window : m_switchableWindows) {
+		window->Switch(0);
+		int x_range = 0;
+		int y_range = 0;
+		window->GetLightingRange(x_range, y_range);
+		auto location = window->GetCurrentDestination(m_objectFactory.get());
+
+		auto tile_1 = GetBackgroundTile({
+			location.x + (TILE_WIDTH * 2), location.y + location.h,
+			TILE_WIDTH * 2, TILE_HEIGHT * 2
+			});
+		auto tile_2 = GetBackgroundTile({
+			location.x + (TILE_WIDTH * 2), location.y + location.h + (TILE_HEIGHT * 2),
+			TILE_WIDTH * 2, TILE_HEIGHT * 2
+			});
+		auto tile_3 = GetBackgroundTile({
+			location.x + (TILE_WIDTH * 4), location.y + location.h,
+			TILE_WIDTH * 2, TILE_HEIGHT * 2
+			});
+		auto tile_4 = GetBackgroundTile({
+			location.x + (TILE_WIDTH * 4), location.y + location.h + (TILE_HEIGHT * 2),
+			TILE_WIDTH * 2, TILE_HEIGHT * 2
+			});
+		auto tile_5 = GetBackgroundTile({
+			location.x + (TILE_WIDTH * 2), location.y + location.h + (TILE_HEIGHT * 4),
+			TILE_WIDTH * 2, TILE_HEIGHT * 2
+			});
+		auto tile_6 = GetBackgroundTile({
+			location.x + (TILE_WIDTH * 4), location.y + location.h + (TILE_HEIGHT * 4),
+			TILE_WIDTH * 2, TILE_HEIGHT * 2
+			});
+
+
+		auto tile_7 = GetForegroundTile({
+			location.x + (TILE_WIDTH * 2), location.y + location.h,
+			TILE_WIDTH * 2, TILE_HEIGHT * 2
+			});
+		auto tile_8 = GetForegroundTile({
+			location.x + (TILE_WIDTH * 2), location.y + location.h + (TILE_HEIGHT * 2),
+			TILE_WIDTH * 2, TILE_HEIGHT * 2
+			});
+		auto tile_9 = GetForegroundTile({
+			location.x + (TILE_WIDTH * 4), location.y + location.h,
+			TILE_WIDTH * 2, TILE_HEIGHT * 2
+			});
+		auto tile_10 = GetForegroundTile({
+			location.x + (TILE_WIDTH * 4), location.y + location.h + (TILE_HEIGHT * 2),
+			TILE_WIDTH * 2, TILE_HEIGHT * 2
+			});
+		auto tile_11 = GetForegroundTile({
+			location.x + (TILE_WIDTH * 2), location.y + location.h + (TILE_HEIGHT * 4),
+			TILE_WIDTH * 2, TILE_HEIGHT * 2
+			});
+		auto tile_12 = GetForegroundTile({
+			location.x + (TILE_WIDTH * 4), location.y + location.h + (TILE_HEIGHT * 4),
+			TILE_WIDTH * 2, TILE_HEIGHT * 2
+			});
+
+		tile_1->ChangeStatus(!tile_1->IsLit());
+		tile_2->ChangeStatus(!tile_2->IsLit());
+		tile_3->ChangeStatus(!tile_3->IsLit());
+		tile_4->ChangeStatus(!tile_4->IsLit());
+		tile_5->ChangeStatus(!tile_5->IsLit());
+		tile_6->ChangeStatus(!tile_6->IsLit());
+		tile_7->ChangeStatus(!tile_7->IsLit());
+		tile_8->ChangeStatus(!tile_8->IsLit());
+		tile_9->ChangeStatus(!tile_9->IsLit());
+		tile_10->ChangeStatus(!tile_10->IsLit());
+		tile_11->ChangeStatus(!tile_11->IsLit());
+		tile_12->ChangeStatus(!tile_12->IsLit());
+	}
+
+	//for (const auto& window : m_switchableWindows) {
+	//	window->Switch(0);
+	//	int x_range = 0;
+	//	int y_range = 0;
+	//	window->GetLightingRange(x_range, y_range);
+	//	auto location = window->GetCurrentDestination(m_objectFactory.get());
+
+	//	Tile* target_y = nullptr;
+	//	Tile* target_x_left = nullptr;
+	//	Tile* target_x_right = nullptr;
+
+	//	int increment = 0;
+	//	for (int i = y_range; i > 0; --i) {
+	//		
+	//		while (target_y == nullptr) {
+	//			target_y = GetTile({
+	//			location.x + (TILE_WIDTH * increment++),
+	//			location.y + location.h + (i * TILE_HEIGHT),
+	//			TILE_WIDTH * 2,
+	//			TILE_HEIGHT * 2 });
+	//		}
+
+	//		/*for (int j = x_range; j > 0; --j) {
+	//			target_x_left = GetTile({
+	//				location.x - TILE_WIDTH * 2 * j,
+	//				target_y->GetDestinationLocation().y,
+	//				TILE_WIDTH * 2, TILE_HEIGHT * 2 });
+	//			target_x_right = GetTile({
+	//				location.x + TILE_WIDTH * 2 * j,
+	//				target_y->GetDestinationLocation().y,
+	//				TILE_WIDTH * 2, TILE_HEIGHT * 2 });
+
+	//			target_x_left->ChangeStatus(!target_x_left->IsLit());
+	//			target_x_right->ChangeStatus(!target_x_right->IsLit());
+	//		}*/
+
+	//		target_y->ChangeStatus(!target_y->IsLit());
+	//		target_y = nullptr;
+	//		increment = 0;
+	//	}
+	//}
+
+	/*for (const auto& index : m_switchIndices) {
 		auto switch_ = reinterpret_cast<Switch*>(m_tiles[index].get());
 		auto x_range = switch_->GetXRange();
 		auto y_range = switch_->GetYRange();
@@ -468,7 +658,7 @@ void ecc::GameEngine::SwitchLight()
 
 			target_y->ChangeStatus(!target_y->IsLit());
 		}
-	}
+	}*/
 }
 
 void ecc::GameEngine::SetCharacterIndex()

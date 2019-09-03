@@ -75,7 +75,7 @@ void ecc::Character::Move(SDL_Surface* windowSurface)
 
 	auto current_key_states = SDL_GetKeyboardState(nullptr);
 
-	if (current_key_states[SDL_SCANCODE_D]) {
+	if (current_key_states[SDL_SCANCODE_RIGHT]) {
 		m_flipMode = SDL_FLIP_NONE;
 
 		if (!m_animationStarted && !m_jumpStarted) {
@@ -92,7 +92,7 @@ void ecc::Character::Move(SDL_Surface* windowSurface)
 		}
 	}
 
-	if (current_key_states[SDL_SCANCODE_A]) {
+	if (current_key_states[SDL_SCANCODE_LEFT]) {
 		m_flipMode = SDL_FLIP_HORIZONTAL;
 
 		if (!m_animationStarted && !m_jumpStarted) {
@@ -213,7 +213,7 @@ void ecc::Character::Jump()
 {
 	auto key_state = SDL_GetKeyboardState(nullptr);
 
-	if (key_state[SDL_SCANCODE_W] && !m_jumpStarted) {
+	if (key_state[SDL_SCANCODE_SPACE] && !m_jumpStarted) {
 		m_jumpStartedYCoordinate = m_images[0]->m_destinationLocation.y;
 		m_jumpStarted = true;
 		m_jumpTimer = 10;
@@ -227,7 +227,7 @@ void ecc::Character::Jump()
 		}
 
 		for (auto& image : m_images) {
-			image->MoveDestinationLocation(0, m_fallStarted ? m_jumpSpeed : -m_jumpSpeed);
+			image->MoveDestinationLocation(0, m_fallStarted ? static_cast<float>(m_jumpSpeed) : static_cast<float>(-m_jumpSpeed));
 		}
 		m_jumpTimer -= 2;
 

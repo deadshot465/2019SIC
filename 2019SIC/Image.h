@@ -7,7 +7,7 @@ namespace ecc {
 	class Character;
 	class Enemy;
 	class GameEngine;
-	class Object;
+	class ObjectFactory;
 
 	class Image
 	{
@@ -21,11 +21,12 @@ namespace ecc {
 		bool m_isTile = false;
 
 		void LoadImage(SDL_Renderer* renderer, const std::string& fileName, bool transparency = true, int xPos = 0, int yPos = 0, bool isTile = false, ImageIndexFlag imageFlag = {});
+		void LoadObject(SDL_Renderer* renderer, const std::string& fileName);
 
 		friend Character;
 		friend Enemy;
 		friend GameEngine;
-		friend Object;
+		friend ObjectFactory;
 	public:
 		Image();
 		~Image();
@@ -35,5 +36,6 @@ namespace ecc {
 
 		void Render(SDL_Renderer* renderer, SDL_RendererFlip flipMode = SDL_FLIP_NONE, double angle = 0.0,
 			const SDL_Point * center = nullptr, int offsetX = 0, int offsetY = 0);
+		void RenderObject(SDL_Renderer* renderer, int xPos, int yPos);
 	};
 }

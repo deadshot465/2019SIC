@@ -6,7 +6,7 @@ ecc::Enemy::Enemy(SDL_Renderer* renderer, const std::string& waitAnimationFileNa
 	const std::string& moveAnimationFileName,
 	const std::string& attackAnimationFileName,
 	int xPos, int yPos, float speed,
-	float idleSpeed, float moveSpeed, float attackSpeed,
+	double idleSpeed, double moveSpeed, double attackSpeed,
 	int moveRange) :
 	m_enemyRushSpeed(4 * speed), m_enemyMoveRange(moveRange), m_originalX(xPos)
 {

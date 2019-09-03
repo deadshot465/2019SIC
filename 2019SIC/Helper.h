@@ -53,6 +53,22 @@ namespace ecc {
 		Controllable
 	};
 
+	enum class ObjectList {
+		Box,
+		DoorBlocked,
+		DoorUnblocked,
+		LeverOff,
+		LeverOn,
+		Window0,
+		Window1Closed,
+		Window1Open,
+		Window2,
+		Window3,
+		Window3Closed,
+		Window3Open,
+		Window4
+	};
+
 	inline void ThrowIfFailed(const std::string& message) {
 		throw std::runtime_error(message);
 	}
