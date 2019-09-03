@@ -7,6 +7,7 @@ namespace ecc {
 	class Character;
 	class Enemy;
 	class GameEngine;
+	class Key;
 	class ObjectFactory;
 
 	class Image
@@ -22,10 +23,13 @@ namespace ecc {
 
 		void LoadImage(SDL_Renderer* renderer, const std::string& fileName, bool transparency = true, int xPos = 0, int yPos = 0, bool isTile = false, ImageIndexFlag imageFlag = {});
 		void LoadObject(SDL_Renderer* renderer, const std::string& fileName);
+		void LoadAnimation(SDL_Renderer* renderer, const std::string& fileName,
+			int xPos, int yPos, int texWidth, int texHeight);
 
 		friend Character;
 		friend Enemy;
 		friend GameEngine;
+		friend Key;
 		friend ObjectFactory;
 	public:
 		Image();

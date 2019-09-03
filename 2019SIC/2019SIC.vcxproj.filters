@@ -27,9 +27,6 @@
     <ClCompile Include="Tile.cpp">
       <Filter>來源檔案</Filter>
     </ClCompile>
-    <ClCompile Include="Switch.cpp">
-      <Filter>來源檔案</Filter>
-    </ClCompile>
     <ClCompile Include="Character.cpp">
       <Filter>來源檔案</Filter>
     </ClCompile>
@@ -75,9 +72,6 @@
       <Filter>標頭檔</Filter>
     </ClInclude>
     <ClInclude Include="Tile.h">
-      <Filter>標頭檔</Filter>
-    </ClInclude>
-    <ClInclude Include="Switch.h">
       <Filter>標頭檔</Filter>
     </ClInclude>
     <ClInclude Include="Character.h">

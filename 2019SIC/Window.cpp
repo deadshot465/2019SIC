@@ -29,8 +29,8 @@ ecc::GameWindow::GameWindow(const std::string& title, int width, int height,
 	m_surface = SDL_GetWindowSurface(m_window);
 
 	m_graphicsEngine = std::make_unique<GameEngine>(m_window, m_surface);
-	m_graphicsEngine->LoadMap("map/Stage1_background.txt", "texture/Background_ver.2 (copy).png", m_surface);
-	m_graphicsEngine->LoadMap("map/Stage1_foreground.txt", "texture/Foreground_ver.2.0.png", m_surface);
+	m_graphicsEngine->LoadMap("map/stage_hall2_background.txt", "texture/Background_ver.2 (copy).png", m_surface);
+	m_graphicsEngine->LoadMap("map/stage_hall2_foreground.txt", "texture/Foreground_ver.2.0.png", m_surface);
 
 	m_graphicsEngine->LoadObject("texture/door_new.png",
 		MAX_MAP_X * TILE_WIDTH - (5 * TILE_WIDTH),
@@ -51,11 +51,11 @@ ecc::GameWindow::GameWindow(const std::string& title, int width, int height,
 		15 * (TILE_WIDTH * 2),
 		height - (TILE_HEIGHT * 2) - (CHARACTER_SPRITE_HEIGHT * 2), 15.0f);
 
-	m_graphicsEngine->LoadCharacter("texture/girl_idle.png",
-		"texture/girl_walk.png",
+	m_graphicsEngine->LoadCharacter("texture/girl_idle (dark).png",
+		"texture/girl_walk(dark).png",
 		"texture/vampire_slash.png",
-		"texture/girl_jump(rise).png",
-		"texture/girl_jump(fall).png",
+		"texture/girl_jump(rise - dark).png",
+		"texture/girl_jump(fall - dark).png",
 		ecc::Character::CharacterFlag::Daughter,
 		5 * (TILE_WIDTH * 2),
 		height - (TILE_HEIGHT * 2) - (CHARACTER_SPRITE_HEIGHT * 2), 10.0f);

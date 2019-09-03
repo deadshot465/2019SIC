@@ -5,7 +5,6 @@
 #include <iostream>
 #include <SDL_image.h>
 #include <sstream>
-#include "Switch.h"
 
 ecc::TileCoordinatesSet ecc::GameEngine::CalculateTileCoordinates(int totalWidth, int totalHeight)
 {
@@ -50,10 +49,22 @@ void ecc::GameEngine::UpdateCharacters(int offsetX, int offsetY, SDL_Surface* wi
 	m_daughter->Render(m_renderer, offsetX,
 		offsetY, 0.0f);
 
-	/*for (const auto& object : m_objects) {
-		auto res_1 = m_father->CheckCollision(object->GetCollisionBox());
-		auto res_2 = m_daughter->CheckCollision(object->GetCollisionBox());
-	}*/
+	for (const auto& key : m_keys) {
+
+		if (!key->GetActiveStatus()) continue;
+
+		bool result = false;
+		if (m_characterIndex == 0) {
+			result = m_father->CheckCollision(key->GetCollisionBox());
+		}
+		else {
+			result = m_daughter->CheckCollision(key->GetCollisionBox());
+		}
+		
+		if (result) {
+			key->SetActive(false);
+		}
+	}
 }
 
 void ecc::GameEngine::CreateTiles(size_t imageIndex, int totalWidth, int totalHeight,
@@ -98,7 +109,13 @@ void ecc::GameEngine::CreateTiles(size_t imageIndex, int totalWidth, int totalHe
 			dst_rect.w = TILE_WIDTH * 2;
 			dst_rect.h = TILE_HEIGHT * 2;
 			++x;
-			tiles.emplace_back(std::make_shared<Tile>(src_rect_on, src_rect_off, dst_rect, TileType::Normal, is_lit));
+
+			bool climbable = false;
+			if (column == 54 || column == 55 || column == 66 || column == 67) {
+				climbable = true;
+			}
+
+			tiles.emplace_back(std::make_shared<Tile>(src_rect_on, src_rect_off, dst_rect, TileType::Normal, is_lit, climbable));
 		}
 		x = 0;
 		++y;
@@ -299,7 +316,8 @@ void ecc::GameEngine::GenerateWindows()
 
 void ecc::GameEngine::GenerateKeyAndDoors()
 {
-	
+	m_keys.emplace_back(std::make_unique<Key>(m_renderer, "texture/item_shine.png", 32, 582, 0.5));
+	m_keys.emplace_back(std::make_unique<Key>(m_renderer, "texture/item_shine.png", 1456, 208, 0.5));
 }
 
 ecc::GameEngine::GameEngine(SDL_Window* window, SDL_Surface* windowSurface)
@@ -309,6 +327,7 @@ ecc::GameEngine::GameEngine(SDL_Window* window, SDL_Surface* windowSurface)
 	m_defaultRtv = SDL_GetRenderTarget(m_renderer);
 	m_camera = std::make_unique<Camera>(windowSurface);
 	m_objectFactory = std::make_unique<ObjectFactory>(m_renderer);
+	GenerateKeyAndDoors();
 }
 
 ecc::GameEngine::~GameEngine()
@@ -502,6 +521,10 @@ void ecc::GameEngine::Render(SDL_Surface* windowSurface, float scaleX, float sca
 
 	GenerateWindows();
 
+	for (const auto& key : m_keys) {
+		key->Render(m_renderer, 1.0f);
+	}
+
 	UpdateCharacters(0, 0, windowSurface);
 
 	MoveEnemy(windowSurface);
@@ -583,82 +606,6 @@ void ecc::GameEngine::SwitchLight()
 		tile_12->ChangeStatus(!tile_12->IsLit());
 	}
 
-	//for (const auto& window : m_switchableWindows) {
-	//	window->Switch(0);
-	//	int x_range = 0;
-	//	int y_range = 0;
-	//	window->GetLightingRange(x_range, y_range);
-	//	auto location = window->GetCurrentDestination(m_objectFactory.get());
-
-	//	Tile* target_y = nullptr;
-	//	Tile* target_x_left = nullptr;
-	//	Tile* target_x_right = nullptr;
-
-	//	int increment = 0;
-	//	for (int i = y_range; i > 0; --i) {
-	//		
-	//		while (target_y == nullptr) {
-	//			target_y = GetTile({
-	//			location.x + (TILE_WIDTH * increment++),
-	//			location.y + location.h + (i * TILE_HEIGHT),
-	//			TILE_WIDTH * 2,
-	//			TILE_HEIGHT * 2 });
-	//		}
-
-	//		/*for (int j = x_range; j > 0; --j) {
-	//			target_x_left = GetTile({
-	//				location.x - TILE_WIDTH * 2 * j,
-	//				target_y->GetDestinationLocation().y,
-	//				TILE_WIDTH * 2, TILE_HEIGHT * 2 });
-	//			target_x_right = GetTile({
-	//				location.x + TILE_WIDTH * 2 * j,
-	//				target_y->GetDestinationLocation().y,
-	//				TILE_WIDTH * 2, TILE_HEIGHT * 2 });
-
-	//			target_x_left->ChangeStatus(!target_x_left->IsLit());
-	//			target_x_right->ChangeStatus(!target_x_right->IsLit());
-	//		}*/
-
-	//		target_y->ChangeStatus(!target_y->IsLit());
-	//		target_y = nullptr;
-	//		increment = 0;
-	//	}
-	//}
-
-	/*for (const auto& index : m_switchIndices) {
-		auto switch_ = reinterpret_cast<Switch*>(m_tiles[index].get());
-		auto x_range = switch_->GetXRange();
-		auto y_range = switch_->GetYRange();
-		auto location = switch_->GetDestinationLocation();
-
-		Tile* target_y = nullptr;
-		Tile* target_x_left = nullptr;
-		Tile* target_x_right = nullptr;
-
-		for (int i = y_range; i > 0; --i) {
-			target_y = GetTile({
-				location.x,
-				location.y + TILE_HEIGHT * i,
-				TILE_WIDTH,
-				TILE_HEIGHT });
-
-			for (int j = x_range; j > 0; --j) {
-				target_x_left = GetTile({
-					location.x - TILE_WIDTH * j,
-					target_y->GetDestinationLocation().y,
-					TILE_WIDTH, TILE_HEIGHT });
-				target_x_right = GetTile({
-					location.x + TILE_WIDTH * j,
-					target_y->GetDestinationLocation().y,
-					TILE_WIDTH, TILE_HEIGHT });
-
-				target_x_left->ChangeStatus(!target_x_left->IsLit());
-				target_x_right->ChangeStatus(!target_x_right->IsLit());
-			}
-
-			target_y->ChangeStatus(!target_y->IsLit());
-		}
-	}*/
 }
 
 void ecc::GameEngine::SetCharacterIndex()

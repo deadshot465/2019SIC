@@ -48,6 +48,24 @@ void ecc::Image::LoadObject(SDL_Renderer* renderer, const std::string& fileName)
 	SDL_FreeSurface(m_image);
 }
 
+void ecc::Image::LoadAnimation(SDL_Renderer* renderer, const std::string& fileName, int xPos, int yPos, int texWidth, int texHeight)
+{
+	m_image = IMG_Load(fileName.c_str());
+
+	SDL_SetColorKey(m_image, SDL_TRUE, SDL_MapRGB(m_image->format,
+		TRANSPARENT_R, TRANSPARENT_G, TRANSPARENT_B));
+
+	m_texture = SDL_CreateTextureFromSurface(renderer, m_image);
+	m_width = m_image->w;
+	m_height = m_image->h;
+	m_isTile = false;
+
+	m_texCoord = { 0, 0, texWidth, texHeight };
+	m_destinationLocation = { xPos, yPos, texWidth * 2, texHeight * 2 };
+
+	SDL_FreeSurface(m_image);
+}
+
 ecc::Image::Image()
 {
 }

@@ -121,6 +121,7 @@ void ecc::Character::Render(SDL_Renderer* renderer, float speedFactor)
 {
 	Animate(speedFactor);
 	m_images[static_cast<size_t>(m_currentImageIndex)]->Render(renderer, m_flipMode);
+	SetCollisionBox();
 }
 
 void ecc::Character::Render(SDL_Renderer* renderer, int offsetX, int offsetY, float speedFactor)
@@ -128,6 +129,7 @@ void ecc::Character::Render(SDL_Renderer* renderer, int offsetX, int offsetY, fl
 	Animate(speedFactor);
 	m_images[static_cast<size_t>(m_currentImageIndex)]->Render(renderer, m_flipMode, 0.0,
 		nullptr, offsetX, offsetY);
+	SetCollisionBox();
 }
 
 void ecc::Character::SetStatus(ecc::CharacterStatusFlag status)
@@ -173,8 +175,8 @@ void ecc::Character::Animate(float speedFactor)
 				m_animationTimer = 0;
 				m_animationStarted = false;
 				auto key_state = SDL_GetKeyboardState(nullptr);
-				if (!key_state[SDL_SCANCODE_D] &&
-					!key_state[SDL_SCANCODE_A])
+				if (!key_state[SDL_SCANCODE_RIGHT] &&
+					!key_state[SDL_SCANCODE_LEFT])
 					m_currentImageIndex = ImageIndexFlag::Idle;
 			}
 
@@ -190,11 +192,11 @@ void ecc::Character::Animate(float speedFactor)
 
 void ecc::Character::SetCollisionBox()
 {
-	m_collisionBox.w = CHARACTER_SPRITE_WIDTH / 2;
-	m_collisionBox.h = CHARACTER_SPRITE_HEIGHT;
+	m_collisionBox.w = CHARACTER_SPRITE_WIDTH * 2;
+	m_collisionBox.h = CHARACTER_SPRITE_HEIGHT * 2;
 	m_collisionBox.x =
 		m_images[static_cast<size_t>(m_currentImageIndex)]
-		->m_destinationLocation.x + (CHARACTER_SPRITE_WIDTH / 4);
+		->m_destinationLocation.x;
 	m_collisionBox.y =
 		m_images[static_cast<size_t>(m_currentImageIndex)]->m_destinationLocation.y;
 }
@@ -216,20 +218,21 @@ void ecc::Character::Jump()
 	if (key_state[SDL_SCANCODE_SPACE] && !m_jumpStarted) {
 		m_jumpStartedYCoordinate = m_images[0]->m_destinationLocation.y;
 		m_jumpStarted = true;
-		m_jumpTimer = 10;
+		m_jumpTimer = (m_characterFlag == CharacterFlag::Father) ? 10 : 4;
 		m_currentImageIndex = ImageIndexFlag::Jump;
 	}
 
 	if (m_jumpStarted) {
-		if (m_jumpTimer <= 0) {
+		if (m_jumpTimer <= 0 && !m_fallStarted) {
 			m_currentImageIndex = ImageIndexFlag::Fall;
 			m_fallStarted = true;
+			m_jumpTimer = (m_characterFlag == CharacterFlag::Father) ? 10 : 4;
 		}
 
 		for (auto& image : m_images) {
-			image->MoveDestinationLocation(0, m_fallStarted ? static_cast<float>(m_jumpSpeed) : static_cast<float>(-m_jumpSpeed));
+			image->MoveDestinationLocation(0, m_fallStarted ? static_cast<float>(m_jumpTimer) : static_cast<float>(-m_jumpTimer));
 		}
-		m_jumpTimer -= 2;
+		--m_jumpTimer;
 
 		if (m_fallStarted && m_images[0]->m_destinationLocation.y >= m_jumpStartedYCoordinate) {
 			m_jumpStarted = false;

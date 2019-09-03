@@ -10,6 +10,7 @@
 #include "Enemy.h"
 #include "Helper.h"
 #include "Image.h"
+#include "Key.h"
 #include "ObjectFactory.h"
 #include "SwitchableWindow.h"
 #include "Tile.h"
@@ -51,6 +52,7 @@ namespace ecc {
 		unsigned short m_characterIndex = 0;
 
 		std::vector<std::unique_ptr<SwitchableWindow>> m_switchableWindows;
+		std::vector<std::unique_ptr<Key>> m_keys;
 
 		void UpdateCharacters(int offsetX, int offsetY, SDL_Surface* windowSurface);
 
