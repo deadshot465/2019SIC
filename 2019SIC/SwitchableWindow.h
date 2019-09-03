@@ -15,6 +15,7 @@ namespace ecc {
 		int m_group = 0;
 		int m_xLightingRange = 0;
 		int m_yLightingRange = 0;
+		bool m_enable = true;
 
 	public:
 		SwitchableWindow(ObjectList onType, ObjectList offType, int xPos, int yPos,
@@ -23,12 +24,14 @@ namespace ecc {
 
 		// ICollidable ‚ğ‰î‚µ‚ÄŒp³‚³‚ê‚Ü‚µ‚½
 		virtual void SetCollisionBox() override;
+		void SetCollisionBox(ObjectFactory* factory);
 
 		// IRenderable ‚ğ‰î‚µ‚ÄŒp³‚³‚ê‚Ü‚µ‚½
 		virtual void Render(SDL_Renderer* renderer, float speedFactor) override;
 		void Render(SDL_Renderer* renderer, ObjectFactory* factory);
 		
 		void Switch(int group = 0);
+		void SetEnable(bool status);
 
 		virtual const SDL_Rect& GetCurrentDestination() override;
 		const SDL_Rect& GetCurrentDestination(ObjectFactory* factory);

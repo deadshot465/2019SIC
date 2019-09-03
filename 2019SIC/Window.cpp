@@ -9,9 +9,9 @@ ecc::GameWindow::GameWindow(const std::string& title, int width, int height,
 
 	if (fullScreen) {
 		auto displays = SDL_GetNumVideoDisplays();
-		SDL_DisplayMode display_mode = {};
+		auto display_mode = SDL_DisplayMode();
 		SDL_GetCurrentDisplayMode(displays - 1, &display_mode);
-		SDL_Rect bounds = {};
+		auto bounds = SDL_Rect();
 		SDL_GetDisplayBounds(displays - 1, &bounds);
 		width = bounds.w;
 		height = bounds.h;
@@ -23,14 +23,15 @@ ecc::GameWindow::GameWindow(const std::string& title, int width, int height,
 		m_window = SDL_CreateWindow(title.c_str(), xPos, yPos, width, height, flags);
 	}
 
-	m_scaleX = static_cast<float>(width) / MAP_WIDTH;
-	m_scaleY = static_cast<float>(height) / MAP_HEIGHT;
+	//m_scaleX = static_cast<float>(width) / MAP_WIDTH;
+	//m_scaleY = static_cast<float>(height) / MAP_HEIGHT;
 
 	m_surface = SDL_GetWindowSurface(m_window);
 
-	m_graphicsEngine = std::make_unique<GameEngine>(m_window, m_surface);
-	m_graphicsEngine->LoadMap("map/stage_hall2_background.txt", "texture/Background_ver.2 (copy).png", m_surface);
-	m_graphicsEngine->LoadMap("map/stage_hall2_foreground.txt", "texture/Foreground_ver.2.0.png", m_surface);
+	m_sceneManager = std::make_unique<SceneManager>(m_window, m_surface);
+	m_sceneManager->LoadScene(m_window, m_surface, Scene::Title);
+
+	/*
 
 	m_graphicsEngine->LoadObject("texture/door_new.png",
 		MAX_MAP_X * TILE_WIDTH - (5 * TILE_WIDTH),
@@ -40,25 +41,8 @@ ecc::GameWindow::GameWindow(const std::string& title, int width, int height,
 		"texture/vampire_enemy_walk.png",
 		"texture/vampire_enemy_run.png",
 		25 * (TILE_WIDTH * 2),
-		height - (TILE_HEIGHT * 2) - (CHARACTER_SPRITE_HEIGHT * 2), 2.5f, 3);
+		height - (TILE_HEIGHT * 2) - (CHARACTER_SPRITE_HEIGHT * 2), 2.5f, 3);*/
 
-	m_graphicsEngine->LoadCharacter("texture/vampire_idle.png",
-		"texture/vampire_run.png",
-		"texture/vampire_slash.png",
-		"texture/vampire_jump(rise).png",
-		"texture/vampire_jump(fall).png",
-		ecc::Character::CharacterFlag::Father,
-		15 * (TILE_WIDTH * 2),
-		height - (TILE_HEIGHT * 2) - (CHARACTER_SPRITE_HEIGHT * 2), 15.0f);
-
-	m_graphicsEngine->LoadCharacter("texture/girl_idle (dark).png",
-		"texture/girl_walk(dark).png",
-		"texture/vampire_slash.png",
-		"texture/girl_jump(rise - dark).png",
-		"texture/girl_jump(fall - dark).png",
-		ecc::Character::CharacterFlag::Daughter,
-		5 * (TILE_WIDTH * 2),
-		height - (TILE_HEIGHT * 2) - (CHARACTER_SPRITE_HEIGHT * 2), 10.0f);
 
 	SDL_UpdateWindowSurface(m_window);
 	m_isInit = true;
@@ -85,12 +69,35 @@ void ecc::GameWindow::Broadcast()
 			case SDLK_ESCAPE:
 				m_isInit = false;
 				break;
+			case SDLK_z:
+			{
+				switch (m_sceneManager->GetCurrentScene())
+				{
+				case Scene::Title:
+					m_sceneManager->LoadScene(m_window, m_surface, Scene::Hallway1);
+					break;
+				case Scene::Hallway1:
+					m_sceneManager->LoadScene(m_window, m_surface, Scene::Hallway2);
+					break;
+				case Scene::Hallway2:
+					m_sceneManager->LoadScene(m_window, m_surface, Scene::Hallway3);
+					break;
+				case Scene::Hallway3:
+					m_sceneManager->LoadScene(m_window, m_surface, Scene::Stage1);
+					break;
+				case Scene::Stage1:
+					m_sceneManager->LoadScene(m_window, m_surface, Scene::Stage2);
+					break;
+				default:
+					break;
+				}
+			}
 			case SDLK_l:
-				m_graphicsEngine->SwitchLight();
+				//m_graphicsEngine->SwitchLight();
 				break;
 			case SDLK_LSHIFT:
 			{
-				m_graphicsEngine->SetCharacterIndex();
+				//m_graphicsEngine->SetCharacterIndex();
 				break;
 			}
 			default:
@@ -100,8 +107,11 @@ void ecc::GameWindow::Broadcast()
 		}
 	}
 
-	m_graphicsEngine->Clear(0xFF, 0xFF, 0xFF, 0xFF);
-	m_graphicsEngine->Render(m_surface, m_scaleX, m_scaleY);
+	m_sceneManager->Render(m_surface, m_scaleX, m_scaleY);
+	
+	if (m_sceneManager->GetCurrentGameStatus() == GameStatus::GameOver) {
+		m_sceneManager->LoadScene(m_window, m_surface, Scene::GameOver);
+	}
 }
 
 bool ecc::GameWindow::IsInit() const noexcept

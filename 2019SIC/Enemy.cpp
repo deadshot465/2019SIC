@@ -15,14 +15,13 @@ ecc::Enemy::Enemy(SDL_Renderer* renderer, const std::string& waitAnimationFileNa
 	m_animationSpeeds.resize(3);
 
 	m_images[0] = std::make_unique<Image>();
-	m_images[0]->LoadImage(renderer, waitAnimationFileName, true, xPos, yPos, false,
-		ImageIndexFlag::Idle);
+	m_images[0]->LoadCharacterSprites(renderer, waitAnimationFileName, ImageIndexFlag::Idle, xPos, yPos);
+	
 	m_images[1] = std::make_unique<Image>();
-	m_images[1]->LoadImage(renderer, moveAnimationFileName, true, xPos, yPos, false,
-		ImageIndexFlag::Move);
+	m_images[1]->LoadCharacterSprites(renderer, moveAnimationFileName, ImageIndexFlag::Move, xPos, yPos);
+	
 	m_images[2] = std::make_unique<Image>();
-	m_images[2]->LoadImage(renderer, attackAnimationFileName, true, xPos, yPos, false,
-		ImageIndexFlag::Move);
+	m_images[2]->LoadCharacterSprites(renderer, attackAnimationFileName, ImageIndexFlag::Attack, xPos, yPos);
 
 	m_frameCounts[0] = m_images[0]->m_width / CHARACTER_SPRITE_WIDTH;
 	m_frameCounts[1] = m_images[1]->m_width / CHARACTER_SPRITE_WIDTH;

@@ -33,7 +33,7 @@ namespace ecc {
 	constexpr int TOP_Y_BOUND = TILE_HEIGHT;
 	constexpr int BOTTOM_Y_BOUND = MAX_MAP_Y * TILE_HEIGHT - TILE_HEIGHT;
 
-	constexpr int MAX_ANIMATION_COUNT = 5;
+	constexpr int MAX_ANIMATION_COUNT = 6;
 
 	enum class TileType {
 		Normal,
@@ -45,7 +45,8 @@ namespace ecc {
 		Move,
 		Attack,
 		Jump,
-		Fall
+		Fall,
+		Climb
 	};
 
 	enum class CharacterStatusFlag {
@@ -67,6 +68,46 @@ namespace ecc {
 		Window3Closed,
 		Window3Open,
 		Window4
+	};
+
+	enum class Scene {
+		None,
+		Title,
+		Hallway1,
+		Hallway2,
+		Hallway3,
+		Stage1,
+		Stage2,
+		Stage3,
+		GameOver
+	};
+
+	enum class GameStatus {
+		Normal,
+		GameOver
+	};
+
+	struct MapPair {
+		std::string backgroundFile;
+		std::string foregroundFile;
+	};
+
+	struct CharacterAnimationSet {
+		std::string idleAnimation;
+		std::string moveAnimation;
+		std::string attackAnimation;
+		std::string jumpAnimation;
+		std::string fallAnimation;
+		std::string climbAnimation;
+	};
+
+	struct CharacterAnimationParameters {
+		float idleSpeed;
+		float moveSpeed;
+		float attackSpeed;
+		float jumpSpeed;
+		float fallSpeed;
+		float climbSpeed;
 	};
 
 	inline void ThrowIfFailed(const std::string& message) {

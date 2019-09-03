@@ -9,6 +9,7 @@
 #include "Image.h"
 #include "IMovable.h"
 #include "IRenderable.h"
+#include "Tile.h"
 
 namespace ecc {
 	class Character : public IMovable, public IAnimatable, public ICollidable, public IRenderable
@@ -26,9 +27,11 @@ namespace ecc {
 			const std::string& attackAnimationFileName,
 			const std::string& jumpAnimationFileName,
 			const std::string& fallAnimationFileName,
+			const std::string& climbAnimationFileName,
 			CharacterFlag characterFlag,
 			int xPos, int yPos, float speed,
 			float idleSpeed, float moveSpeed, float attackSpeed, float jumpSpeed, float fallSpeed,
+			float climbSpeed,
 			ImageIndexFlag initialStatus);
 		~Character();
 
@@ -50,7 +53,8 @@ namespace ecc {
 		ImageIndexFlag GetCurrentStatus() const noexcept;
 
 		void Jump();
-
+		void Climb(int xPos, int yPos);
+		void Fall();
 	private:
 		CharacterStatusFlag m_statusFlag = {};
 		ImageIndexFlag m_currentImageIndex = ImageIndexFlag::Idle;
@@ -64,5 +68,8 @@ namespace ecc {
 		bool m_jumpStarted = false;
 		int m_jumpStartedYCoordinate = 0;
 		bool m_fallStarted = false;
+		bool m_climbUpStarted = false;
+		bool m_climbDownStarted = false;
+		int m_climbSpeed = 8;
 	};
 }

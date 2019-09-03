@@ -21,10 +21,14 @@ namespace ecc {
 		SDL_Rect m_destinationLocation = {};
 		bool m_isTile = false;
 
-		void LoadImage(SDL_Renderer* renderer, const std::string& fileName, bool transparency = true, int xPos = 0, int yPos = 0, bool isTile = false, ImageIndexFlag imageFlag = {});
+		void LoadImage(SDL_Renderer* renderer, const std::string& fileName, bool transparency = true, bool isTile = false);
 		void LoadObject(SDL_Renderer* renderer, const std::string& fileName);
 		void LoadAnimation(SDL_Renderer* renderer, const std::string& fileName,
 			int xPos, int yPos, int texWidth, int texHeight);
+		
+		void LoadSprite(SDL_Renderer* renderer, const std::string& fileName, int xPos, int yPos, bool transparency = true, float magnifier = 1.0f);
+		void LoadCharacterSprites(SDL_Renderer* renderer, const std::string& fileName,
+			ecc::ImageIndexFlag imageFlag, int xPos, int yPos);
 
 		friend Character;
 		friend Enemy;

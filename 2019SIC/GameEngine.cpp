@@ -4,6 +4,7 @@
 #include <fstream>
 #include <iostream>
 #include <SDL_image.h>
+#include <set>
 #include <sstream>
 
 ecc::TileCoordinatesSet ecc::GameEngine::CalculateTileCoordinates(int totalWidth, int totalHeight)
@@ -32,15 +33,107 @@ ecc::TileCoordinatesSet ecc::GameEngine::CalculateTileCoordinates(int totalWidth
 	return tile_coordinates;
 }
 
+void ecc::GameEngine::GetAllWalkableTiles()
+{
+	for (const auto& tile : m_tileSet[1]) {
+		if (tile->IsWalkable()) {
+			m_walkableTiles.emplace_back(tile->GetCollisionBox());
+		}
+	}
+}
+
+void ecc::GameEngine::GetAllBlockedTiles()
+{
+	for (const auto& tile : m_tileSet[1]) {
+		if (tile->IsBlocked()) {
+			m_blockedTiles.emplace_back(tile->GetCollisionBox());
+		}
+	}
+}
+
+void ecc::GameEngine::GetAllClimbableTiles()
+{
+	for (const auto& tile : m_tileSet[1]) {
+		if (tile->IsClimbable()) {
+			m_climbableTiles.emplace_back(tile->GetCollisionBox());
+		}
+	}
+}
+
 void ecc::GameEngine::UpdateCharacters(int offsetX, int offsetY, SDL_Surface* windowSurface)
 {
+	if (!m_father || !m_daughter) return;
+
+	for (const auto& tile : m_climbableTiles) {
+		if (m_characterIndex == 0) {
+			if (m_father->CheckCollision(tile)) {
+				
+				auto ladder = std::vector<SDL_Rect>();
+				
+				for (const auto& tile_ : m_climbableTiles) {
+					if (tile_.x == tile.x) {
+						ladder.emplace_back(tile_);
+					}
+				}
+
+				auto y_coordinates = std::vector<int>();
+				std::transform(ladder.begin(), ladder.end(), std::back_inserter(y_coordinates),
+					[&](const SDL_Rect& rect) -> int {
+						return rect.y;
+					});
+
+				auto max_y = std::max_element(y_coordinates.begin(), y_coordinates.end());
+				auto min_y = std::min_element(y_coordinates.begin(), y_coordinates.end());
+
+				bool move_upward = false;
+				
+				if (tile.y == *max_y) {
+					move_upward = true;
+				}
+
+				auto key_state = SDL_GetKeyboardState(nullptr);
+				if (key_state[SDL_SCANCODE_W]) {
+					if (move_upward) {
+						m_father->Climb(tile.x, (*min_y) + 2 * TILE_HEIGHT);
+					}
+					else {
+						m_father->Climb(tile.x, (*max_y) - 7 * TILE_HEIGHT);
+					}
+				}
+			}
+		}
+	}
+
+	auto father_position = m_father->GetCurrentDestination();
+	auto daughter_position = m_daughter->GetCurrentDestination();
+
 	if (m_characterIndex == 0) {
 		m_father->Jump();
-		m_father->Move(windowSurface);
+		auto walkable_area_found = false;
+		for (const auto& tile : m_walkableTiles) {
+			if (m_father->CheckCollision(tile)) {
+				m_father->Move(windowSurface);
+				walkable_area_found = true;
+			}
+		}
+		auto blocked_area_found = false;
+		if (!walkable_area_found) {
+			for (const auto& tile : m_blockedTiles) {
+				if (m_father->CheckCollision(tile)) {
+					blocked_area_found = true;
+				}
+			}
+			if (!blocked_area_found)
+				m_father->Fall();
+		}
 	}
 	else {
 		m_daughter->Jump();
-		m_daughter->Move(windowSurface);
+		for (const auto& tile : m_walkableTiles) {
+			if (m_daughter->CheckCollision(tile)) {
+				m_daughter->Move(windowSurface);
+			}
+		}
 	}
 
 	m_father->Render(m_renderer, offsetX,
@@ -63,6 +156,13 @@ void ecc::GameEngine::UpdateCharacters(int offsetX, int offsetY, SDL_Surface* wi
 		
 		if (result) {
 			key->SetActive(false);
+		}
+	}
+
+	for (const auto& window : m_switchableWindows) {
+		if (m_father->CheckCollision(window->GetCollisionBox()) && window->IsLit()) {
+			m_currentGameStatus = GameStatus::GameOver;
+			break;
 		}
 	}
 }
@@ -111,11 +211,26 @@ void ecc::GameEngine::CreateTiles(size_t imageIndex, int totalWidth, int totalHe
 			++x;
 
 			bool climbable = false;
-			if (column == 54 || column == 55 || column == 66 || column == 67) {
-				climbable = true;
+			bool walkable = false;
+			bool blocked = false;
+			if (imageIndex == 1) {
+				if (column == 54 || column == 55 || column == 66 || column == 67) {
+					climbable = true;
+				}
+				if ((column >= 0 && column <= 23 &&
+					column != 1 && column != 13 && column != 6 && column != 18 &&
+					column != 7 && column != 19) || (column == 56 || column == 68)) {
+					walkable = true;
+				}
+				if (column == 1 || column == 6 || column == 7 || column == 13 || column == 18 || column == 19) {
+					blocked = true;
+				}
 			}
 
-			tiles.emplace_back(std::make_shared<Tile>(src_rect_on, src_rect_off, dst_rect, TileType::Normal, is_lit, climbable));
+			auto tile = std::make_shared<Tile>(src_rect_on, src_rect_off, dst_rect,
+				TileType::Normal, is_lit, climbable, walkable, blocked);
+
+			tiles.emplace_back(tile);
 		}
 		x = 0;
 		++y;
@@ -135,9 +250,9 @@ void ecc::GameEngine::RenderTiles(SDL_Surface* windowSurface, const SDL_Rect& ca
 	m_tileRtv = SDL_CreateTexture(m_renderer, format, SDL_TEXTUREACCESS_TARGET,
 		m_currentMapWidth * TILE_WIDTH * 2,
 		m_currentMapHeight * TILE_HEIGHT * 2);
-	SDL_SetRenderTarget(m_renderer, m_tileRtv);
-	SDL_SetRenderDrawColor(m_renderer, 0xFF, 0xFF, 0xFF, 0xFF);
-	SDL_RenderClear(m_renderer);
+	//SDL_SetRenderTarget(m_renderer, m_tileRtv);
+	//SDL_SetRenderDrawColor(m_renderer, 0xFF, 0xFF, 0xFF, 0xFF);
+	//SDL_RenderClear(m_renderer);
 
 	for (size_t i = 0; i < m_tileSet.size(); ++i) {
 		auto image_index_iter = std::find_if(m_tileCoordinateMapping.cbegin(),
@@ -146,12 +261,34 @@ void ecc::GameEngine::RenderTiles(SDL_Surface* windowSurface, const SDL_Rect& ca
 			});
 		auto image_index = image_index_iter->first;
 
+		SDL_SetRenderDrawColor(m_renderer, 0xFF, 0xFF, 0xFF, 0xFF);
+
 		for (const auto& tile : m_tileSet[i]) {
-			SDL_RenderCopy(m_renderer, m_images[image_index]->m_texture, &(tile->GetCurrentRect()),
+			int res = SDL_RenderCopy(m_renderer, m_images[image_index]->m_texture, &(tile->GetCurrentRect()),
 				&(tile->GetDestinationLocation()));
+			if (res != 0) {
+				std::cerr << SDL_GetError() << "\n";
+			}
+#ifdef NDEBUG
+#else
+			if (tile->IsWalkable())
+				SDL_RenderDrawRect(m_renderer, &(tile->GetCollisionBox()));
+			if (tile->IsBlocked()) {
+				SDL_SetRenderDrawColor(m_renderer, 0x00, 0xFF, 0x00, 0xFF);
+				SDL_RenderDrawRect(m_renderer, &(tile->GetCollisionBox()));
+				SDL_SetRenderDrawColor(m_renderer, 0xFF, 0xFF, 0xFF, 0xFF);
+			}
+			if (tile->IsClimbable()) {
+				SDL_SetRenderDrawColor(m_renderer, 0x00, 0xFF, 0xFF, 0xFF);
+				SDL_RenderDrawRect(m_renderer, &(tile->GetCollisionBox()));
+				SDL_SetRenderDrawColor(m_renderer, 0xFF, 0xFF, 0xFF, 0xFF);
+			}
+
+			
+#endif
 		}
 	}
-	SDL_SetRenderTarget(m_renderer, nullptr);
+	//SDL_SetRenderTarget(m_renderer, nullptr);
 }
 
 ecc::Tile* ecc::GameEngine::GetBackgroundTile(const SDL_Rect& location) noexcept
@@ -248,76 +385,110 @@ void ecc::GameEngine::MoveEnemy(SDL_Surface* windowSurface)
 	}
 }
 
-void ecc::GameEngine::GenerateWindows()
+void ecc::GameEngine::GenerateWindows(Scene scene)
 {
-	int x_offset = 2 * 2 * TILE_WIDTH;
-	int y_offset = 3 * 2 * TILE_HEIGHT;
-	static bool window_generated = false;
-	int j = 0;
+	switch (scene)
+	{
+	case ecc::Scene::None:
+		break;
+	case ecc::Scene::Title:
+		break;
+	case ecc::Scene::Hallway1:
+		break;
+	case ecc::Scene::Hallway2:
+		break;
+	case ecc::Scene::Hallway3:
+		break;
+	case ecc::Scene::Stage1:
+	{
+		int x_offset = 2 * 2 * TILE_WIDTH;
+		int y_offset = 3 * 2 * TILE_HEIGHT;
+		int j = 0;
 
-	m_objectFactory->CreateWindow(m_renderer, ObjectList::Window3Closed, 64, 96);
-	//m_objectFactory->CreateWindow(m_renderer, ObjectList::Window3Open, 272, 96);
-	//m_objectFactory->CreateWindow(m_renderer, ObjectList::Window3Open, 528, 96);
-	//m_objectFactory->CreateWindow(m_renderer, ObjectList::Window3Closed, 736, 96);
-	//m_objectFactory->CreateWindow(m_renderer, ObjectList::Window3Open, 944, 96);
-	if (!window_generated) {
-		m_switchableWindows.emplace_back(std::make_unique<SwitchableWindow>(ObjectList::Window3Open, ObjectList::Window3Closed, 288, 96, 2, 2, true, 0));
-		m_switchableWindows.emplace_back(std::make_unique<SwitchableWindow>(ObjectList::Window3Open, ObjectList::Window3Closed, 544, 96, 2, 2, false, 0));
-		m_switchableWindows.emplace_back(std::make_unique<SwitchableWindow>(ObjectList::Window3Open, ObjectList::Window3Closed, 736, 96, 2, 2, false, 0));
-		m_switchableWindows.emplace_back(std::make_unique<SwitchableWindow>(ObjectList::Window3Open, ObjectList::Window3Closed, 960, 96, 2, 2, true, 0));
-		window_generated = true;
-	}
-	else {
-		for (const auto& window : m_switchableWindows) {
-			window->Render(m_renderer, m_objectFactory.get());
+		m_objectFactory->CreateWindow(m_renderer, ObjectList::Window3Closed, 64, 96);
+		//m_objectFactory->CreateWindow(m_renderer, ObjectList::Window3Open, 272, 96);
+		//m_objectFactory->CreateWindow(m_renderer, ObjectList::Window3Open, 528, 96);
+		//m_objectFactory->CreateWindow(m_renderer, ObjectList::Window3Closed, 736, 96);
+		//m_objectFactory->CreateWindow(m_renderer, ObjectList::Window3Open, 944, 96);
+		if (!m_windowGenerated) {
+			m_switchableWindows.emplace_back(std::make_unique<SwitchableWindow>(ObjectList::Window3Open, ObjectList::Window3Closed, 288, 96, 2, 2, true, 0));
+			m_switchableWindows.emplace_back(std::make_unique<SwitchableWindow>(ObjectList::Window3Open, ObjectList::Window3Closed, 544, 96, 2, 2, false, 0));
+			m_switchableWindows.emplace_back(std::make_unique<SwitchableWindow>(ObjectList::Window3Open, ObjectList::Window3Closed, 736, 96, 2, 2, false, 0));
+			m_switchableWindows.emplace_back(std::make_unique<SwitchableWindow>(ObjectList::Window3Open, ObjectList::Window3Closed, 960, 96, 2, 2, true, 0));
+
+			/*m_objectFactory->CreateWindow(m_renderer, ObjectList::Window3Open, 64, 416);
+			m_objectFactory->CreateWindow(m_renderer, ObjectList::Window1Open, 704, 448);
+			m_objectFactory->CreateWindow(m_renderer, ObjectList::Window1Open, 832, 448);
+			m_objectFactory->CreateWindow(m_renderer, ObjectList::Window1Open, 960, 448);
+			m_objectFactory->CreateWindow(m_renderer, ObjectList::Window1Open, 1088, 448);
+			m_objectFactory->CreateWindow(m_renderer, ObjectList::Window1Open, 1216, 448);*/
+
+			m_switchableWindows.emplace_back(std::make_unique<SwitchableWindow>(ObjectList::Window3Open, ObjectList::Window3Closed, 64, 416, 2, 2, true, 0));
+			m_switchableWindows.emplace_back(std::make_unique<SwitchableWindow>(ObjectList::Window1Open, ObjectList::Window1Closed, 704, 448, 1, 2, false, 0));
+			m_switchableWindows.emplace_back(std::make_unique<SwitchableWindow>(ObjectList::Window1Open, ObjectList::Window1Closed, 832, 448, 1, 2, false, 0));
+			m_switchableWindows.emplace_back(std::make_unique<SwitchableWindow>(ObjectList::Window1Open, ObjectList::Window1Closed, 960, 448, 1, 2, true, 0));
+			m_switchableWindows.emplace_back(std::make_unique<SwitchableWindow>(ObjectList::Window1Open, ObjectList::Window1Closed, 1088, 448, 1, 2, false, 0));
+			m_switchableWindows.emplace_back(std::make_unique<SwitchableWindow>(ObjectList::Window1Open, ObjectList::Window1Closed, 1216, 448, 1, 2, true, 0));
+
+			for (const auto& window : m_switchableWindows) {
+				window->SetCollisionBox(m_objectFactory.get());
+			}
+
+			m_windowGenerated = true;
 		}
+		else {
+			for (const auto& window : m_switchableWindows) {
+				window->Render(m_renderer, m_objectFactory.get());
+#ifdef NDEBUG
+#else
+				SDL_SetRenderDrawColor(m_renderer, 0xFF, 0x00, 0xFF, 0xFF);
+				SDL_RenderDrawRect(m_renderer, &(window->GetCollisionBox()));
+				SDL_SetRenderDrawColor(m_renderer, 0xFF, 0xFF, 0xFF, 0xFF);
+#endif
+			}
+		}
+
+		break;
 	}
-
-	m_objectFactory->CreateWindow(m_renderer, ObjectList::Window3Open, 64, 416);
-	m_objectFactory->CreateWindow(m_renderer, ObjectList::Window1Open, 704, 448);
-	m_objectFactory->CreateWindow(m_renderer, ObjectList::Window1Open, 832, 448);
-	m_objectFactory->CreateWindow(m_renderer, ObjectList::Window1Open, 960, 448);
-	m_objectFactory->CreateWindow(m_renderer, ObjectList::Window1Open, 1088, 448);
-	m_objectFactory->CreateWindow(m_renderer, ObjectList::Window1Open, 1216, 448);
-
-	//for (auto i = 0; i < 9; ++i, x_offset += 9 * TILE_WIDTH) {
-	//	if (i >= 2 && i <= 5) {
-	//		//m_objectFactory->CreateWindow(m_renderer, ObjectList::Window3Open, x_offset, y_offset);
-	//		if (!window_generated) {
-	//			m_switchableWindows.emplace_back(std::make_unique<SwitchableWindow>(ObjectList::Window3Open, ObjectList::Window3Closed, x_offset, y_offset,
-	//				2, 2, (i % 2 == 0) ? true : false, 0));
-	//		}
-	//		else {
-	//			m_switchableWindows[j++]->Render(m_renderer, m_objectFactory.get());
-	//		}
-	//	}
-	//	else {
-	//		m_objectFactory->CreateWindow(m_renderer, ObjectList::Window3Closed, x_offset, y_offset);
-	//	}
-	//}
-	//window_generated = true;
-
-	//x_offset = 2 * 2 * TILE_WIDTH;
-	//y_offset = 13 * 2 * TILE_HEIGHT;
-
-	//m_objectFactory->CreateWindow(m_renderer, ObjectList::Window3Closed, x_offset, y_offset);
-	//x_offset += 9 * TILE_WIDTH;
-	//m_objectFactory->CreateWindow(m_renderer, ObjectList::Window3Closed, x_offset, y_offset);
-	//x_offset += 18 * TILE_WIDTH;
-	//for (auto i = 0; i < 7; ++i, x_offset += 9 * TILE_WIDTH) {
-	//	if (i == 4 || i == 6) {
-	//		m_objectFactory->CreateWindow(m_renderer, ObjectList::Window1Open, x_offset, y_offset);
-	//	}
-	//	else {
-	//		m_objectFactory->CreateWindow(m_renderer, ObjectList::Window1Closed, x_offset, y_offset);
-	//	}
-	//}
+	case ecc::Scene::Stage2:
+		break;
+	case ecc::Scene::Stage3:
+		break;
+	default:
+		break;
+	}
 }
 
 void ecc::GameEngine::GenerateKeyAndDoors()
 {
 	m_keys.emplace_back(std::make_unique<Key>(m_renderer, "texture/item_shine.png", 32, 582, 0.5));
 	m_keys.emplace_back(std::make_unique<Key>(m_renderer, "texture/item_shine.png", 1456, 208, 0.5));
+}
+
+void ecc::GameEngine::ClearScene()
+{
+	m_switchableWindows.clear();
+	m_windowGenerated = false;
+	m_daughter.reset();
+	m_father.reset();
+	m_climbableTiles.clear();
+	m_blockedTiles.clear();
+	m_walkableTiles.clear();
+	m_tileSet.clear();
+	m_tileCoordinates.clear();
+	m_tileCoordinateMapping.clear();
+	m_currentMapHeight = 0;
+	m_currentMapWidth = 0;
+	m_maps.clear();
+	m_images.clear();
+}
+
+void ecc::GameEngine::LoadSprite(const std::string& fileName, int xPos, int yPos, bool transparency, float magnifier)
+{
+	m_images.emplace_back(std::make_unique<Image>());
+	auto iter = m_images.end();
+	--iter;
+	iter->get()->LoadSprite(m_renderer, fileName, xPos, yPos, transparency, magnifier);
 }
 
 ecc::GameEngine::GameEngine(SDL_Window* window, SDL_Surface* windowSurface)
@@ -327,43 +498,19 @@ ecc::GameEngine::GameEngine(SDL_Window* window, SDL_Surface* windowSurface)
 	m_defaultRtv = SDL_GetRenderTarget(m_renderer);
 	m_camera = std::make_unique<Camera>(windowSurface);
 	m_objectFactory = std::make_unique<ObjectFactory>(m_renderer);
-	GenerateKeyAndDoors();
+	//GenerateKeyAndDoors();
 }
 
 ecc::GameEngine::~GameEngine()
 {
+	ClearScene();
 	SDL_DestroyTexture(m_tileRtv);
 	SDL_DestroyTexture(m_defaultRtv);
 	SDL_DestroyRenderer(m_renderer);
 	IMG_Quit();
 }
 
-void ecc::GameEngine::LoadImage(const std::string& fileName,
-	SDL_Surface* windowSurface,
-	bool isTileSet)
-{
-	size_t index = m_images.size();
-	m_images.emplace_back(std::make_unique<Image>());
-	auto iter = m_images.end();
-	--iter;
-	iter->get()->LoadImage(m_renderer, fileName, true, 0, 0, isTileSet);
-
-	if (isTileSet) {
-		auto coordinates = CalculateTileCoordinates(iter->get()->m_width, iter->get()->m_height);
-		m_tileCoordinateMapping.insert(
-			std::pair<size_t, size_t>(index, m_tileCoordinates.size()));
-		m_tileCoordinates.emplace_back(coordinates);
-		CreateTiles(index, iter->get()->m_width, iter->get()->m_height, windowSurface);
-	}
-}
-
-void ecc::GameEngine::LoadObject(const std::string& fileName, int xPos, int yPos)
-{
-	//m_objects.emplace_back(std::make_unique<ObjectFactory>(m_renderer, fileName, xPos, yPos));
-}
-
-void ecc::GameEngine::LoadMap(const std::string& mapName, const std::string& fileName,
-	SDL_Surface* windowSurface)
+void ecc::GameEngine::LoadMap(const std::string& mapName)
 {
 	auto fs = std::ifstream();
 
@@ -424,40 +571,71 @@ void ecc::GameEngine::LoadMap(const std::string& mapName, const std::string& fil
 	m_maps.emplace_back(number_array);
 	m_currentMapWidth = static_cast<int>(number_array[0].size());
 	m_currentMapHeight = static_cast<int>(number_array.size());
-	LoadImage(fileName, windowSurface, true);
 }
 
-void ecc::GameEngine::LoadCharacter(const std::string& waitAnimationFileName,
-	const std::string& moveAnimationFileName,
-	const std::string& attackAnimationFileName,
-	const std::string& jumpAnimationFileName,
-	const std::string& fallAnimationFileName,
-	Character::CharacterFlag characterFlag,
+void ecc::GameEngine::LoadTileSet(SDL_Surface* surface)
+{
+	size_t index = m_images.size();
+	m_images.emplace_back(std::make_unique<Image>());
+	auto iter = m_images.end();
+	--iter;
+	iter->get()->LoadImage(m_renderer, TILESET_FILENAME.backgroundFile, true, true);
+
+	auto background_coordinates = CalculateTileCoordinates(iter->get()->m_width, iter->get()->m_height);
+	m_tileCoordinateMapping.insert(
+		std::pair<size_t, size_t>(index, m_tileCoordinates.size()));
+	m_tileCoordinates.emplace_back(background_coordinates);
+	CreateTiles(index, iter->get()->m_width, iter->get()->m_height, surface);
+
+	index = m_images.size();
+	m_images.emplace_back(std::make_unique<Image>());
+	iter = m_images.end();
+	--iter;
+	iter->get()->LoadImage(m_renderer, TILESET_FILENAME.foregroundFile, true, true);
+
+	auto foreground_coordinates = CalculateTileCoordinates(iter->get()->m_width, iter->get()->m_height);
+	m_tileCoordinateMapping.insert(
+		std::pair<size_t, size_t>(index, m_tileCoordinates.size()));
+	m_tileCoordinates.emplace_back(foreground_coordinates);
+	CreateTiles(index, iter->get()->m_width, iter->get()->m_height, surface);
+	GetAllWalkableTiles();
+	GetAllBlockedTiles();
+	GetAllClimbableTiles();
+}
+
+void ecc::GameEngine::LoadCharacter(Character::CharacterFlag characterFlag,
 	int xPos, int yPos, float speed, ImageIndexFlag initialStatus)
 {
 	switch (characterFlag)
 	{
 	case ecc::Character::CharacterFlag::Father:
 		m_father = std::make_unique<Character>(m_renderer,
-			waitAnimationFileName, moveAnimationFileName,
-			attackAnimationFileName,
-			jumpAnimationFileName,
-			fallAnimationFileName,
-			characterFlag,
-			xPos, yPos, speed, 1.25f, 0.25f, 1.0f, 1.0f, 1.0f, initialStatus);
+			FATHER_ANIMATIONS.idleAnimation, FATHER_ANIMATIONS.moveAnimation,
+			FATHER_ANIMATIONS.attackAnimation, FATHER_ANIMATIONS.jumpAnimation,
+			FATHER_ANIMATIONS.fallAnimation, FATHER_ANIMATIONS.climbAnimation,
+			characterFlag, xPos, yPos, speed,
+			FATHER_PARAMETERS.idleSpeed, FATHER_PARAMETERS.moveSpeed,
+			FATHER_PARAMETERS.attackSpeed, FATHER_PARAMETERS.jumpSpeed, 
+			FATHER_PARAMETERS.fallSpeed, FATHER_PARAMETERS.climbSpeed, initialStatus);
 		break;
 	case ecc::Character::CharacterFlag::Daughter:
 		m_daughter = std::make_unique<Character>(m_renderer,
-			waitAnimationFileName, moveAnimationFileName,
-			attackAnimationFileName,
-			jumpAnimationFileName,
-			fallAnimationFileName,
-			characterFlag,
-			xPos, yPos, speed, 1.5f, 1.0f, 0.5f, 1.0f, 1.0f, initialStatus);
+			DAUGHTER_ANIMATIONS.idleAnimation, DAUGHTER_ANIMATIONS.moveAnimation,
+			DAUGHTER_ANIMATIONS.attackAnimation, DAUGHTER_ANIMATIONS.jumpAnimation,
+			DAUGHTER_ANIMATIONS.fallAnimation, DAUGHTER_ANIMATIONS.climbAnimation,
+			characterFlag, xPos, yPos, speed,
+			DAUGHTER_PARAMETERS.idleSpeed, DAUGHTER_PARAMETERS.moveSpeed,
+			DAUGHTER_PARAMETERS.attackSpeed, DAUGHTER_PARAMETERS.jumpSpeed,
+			DAUGHTER_PARAMETERS.fallSpeed, DAUGHTER_PARAMETERS.climbSpeed, initialStatus);
 		break;
 	default:
 		break;
 	}
+}
+
+const ecc::GameStatus& ecc::GameEngine::GetCurrentGameStatus() const noexcept
+{
+	return m_currentGameStatus;
 }
 
 void ecc::GameEngine::LoadEnemy(const std::string& waitAnimationFileName,
@@ -477,7 +655,7 @@ void ecc::GameEngine::Clear(Uint8 r, Uint8 g, Uint8 b, Uint8 a)
 	SDL_RenderClear(m_renderer);
 }
 
-void ecc::GameEngine::Render(SDL_Surface* windowSurface, float scaleX, float scaleY)
+void ecc::GameEngine::Render(SDL_Surface* windowSurface, Scene scene)
 {
 	//int camera_x_pos = 0;
 	//int camera_y_pos = 0;
@@ -501,8 +679,9 @@ void ecc::GameEngine::Render(SDL_Surface* windowSurface, float scaleX, float sca
 	//		m_camera->GetCollisionBox().w, m_camera->GetCollisionBox().h);
 	//}
 
-	////SDL_RenderSetScale(m_renderer, scaleX, scaleY);
+	
 	RenderTiles(windowSurface, { 0, 0, 0, 0 });
+	
 	////SDL_RenderCopy(m_renderer, m_tileRtv, nullptr, nullptr);
 
 	//SDL_SetRenderTarget(m_renderer, m_cameraRtv);
@@ -516,18 +695,34 @@ void ecc::GameEngine::Render(SDL_Surface* windowSurface, float scaleX, float sca
 	//	object->Render(m_renderer);
 	//}*/
 
-	SDL_SetRenderTarget(m_renderer, nullptr);
-	SDL_RenderCopy(m_renderer, m_tileRtv, nullptr, nullptr);
+	/*SDL_SetRenderTarget(m_renderer, nullptr);
+	SDL_RenderCopy(m_renderer, m_tileRtv, nullptr, nullptr);*/
 
-	GenerateWindows();
+	GenerateWindows(scene);
 
-	for (const auto& key : m_keys) {
+	/*for (const auto& key : m_keys) {
 		key->Render(m_renderer, 1.0f);
-	}
+	}*/
 
 	UpdateCharacters(0, 0, windowSurface);
 
-	MoveEnemy(windowSurface);
+	//MoveEnemy(windowSurface);
+
+	for (const auto& image : m_images) {
+		if (image->m_isTile) continue;
+
+		image->Render(m_renderer);
+	}
+
+#ifdef NDEBUG
+#else
+	if (m_father && m_daughter) {
+		SDL_SetRenderDrawColor(m_renderer, 0xFF, 0x00, 0x00, 0xFF);
+		SDL_RenderDrawRect(m_renderer, &(m_father->GetCollisionBox()));
+		SDL_SetRenderDrawColor(m_renderer, 0xFF, 0xFF, 0x00, 0xFF);
+		SDL_RenderDrawRect(m_renderer, &(m_daughter->GetCollisionBox()));
+	}
+#endif
 
 	SDL_RenderPresent(m_renderer);
 }
