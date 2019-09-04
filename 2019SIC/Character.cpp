@@ -140,7 +140,7 @@ void ecc::Character::Move()
 	}
 }
 
-void ecc::Character::Move(SDL_Surface* windowSurface)
+void ecc::Character::Move(ecc::Mixer* mixerHandle, SDL_Surface* windowSurface)
 {
 	assert(m_statusFlag != CharacterStatusFlag::Incontrollable);
 
@@ -185,6 +185,18 @@ void ecc::Character::Move(SDL_Surface* windowSurface)
 
 		if (!m_animationStarted && !m_jumpStarted) {
 			m_currentImageIndex = ImageIndexFlag::Attack;
+			auto music_number = GetRandomInt(0, 2);
+			switch (music_number) {
+			case 0:
+				mixerHandle->PlaySound(SoundList::Punch1, 1);
+				break;
+			case 1:
+				mixerHandle->PlaySound(SoundList::Punch2, 1);
+				break;
+			case 2:
+				mixerHandle->PlaySound(SoundList::Punch3, 1);
+				break;
+			}
 			m_animationStarted = true;
 			m_animationTimer = 0;
 		}

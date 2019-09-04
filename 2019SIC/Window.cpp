@@ -50,6 +50,7 @@ ecc::GameWindow::GameWindow(const std::string& title, int width, int height,
 
 ecc::GameWindow::~GameWindow()
 {
+	m_sceneManager.reset();
 	SDL_FreeSurface(m_surface);
 	SDL_DestroyWindow(m_window);
 	SDL_Quit();
@@ -119,6 +120,9 @@ void ecc::GameWindow::Broadcast()
 	
 	if (m_sceneManager->GetCurrentGameStatus() == GameStatus::GameOver) {
 		m_sceneManager->LoadScene(m_window, &m_surface, Scene::GameOver);
+		m_sceneManager->Render(m_surface, m_scaleX, m_scaleY);
+		SDL_Delay(5000);
+		m_isInit = false;
 	}
 }
 

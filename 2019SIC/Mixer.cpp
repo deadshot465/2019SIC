@@ -43,10 +43,16 @@ ecc::Mixer::Mixer()
 		(SoundList::Stairs, Mix_LoadMUS(SFX_STAIRS.c_str())));
 	m_soundMapping.insert(std::pair<SoundList, Mix_Music*>
 		(SoundList::MovingBox, Mix_LoadMUS(SFX_MOVE_WOODBOX.c_str())));
+	m_soundMapping.insert(std::pair<SoundList, Mix_Music*>
+		(SoundList::Scream, Mix_LoadMUS(SFX_SCREAM.c_str())));
 }
 
 ecc::Mixer::~Mixer()
 {
+	for (auto& pair : m_soundMapping) {
+		Mix_FreeMusic(pair.second);
+	}
+
 	Mix_CloseAudio();
 	Mix_Quit();
 }

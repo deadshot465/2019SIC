@@ -107,7 +107,8 @@ namespace ecc {
 		BreakingDoor,
 		LadderStep,
 		Stairs,
-		MovingBox
+		MovingBox,
+		Scream
 	};
 
 	struct MapPair {

@@ -9,6 +9,7 @@
 #include "Image.h"
 #include "IMovable.h"
 #include "IRenderable.h"
+#include "Mixer.h"
 #include "Tile.h"
 
 namespace ecc {
@@ -36,7 +37,7 @@ namespace ecc {
 		~Character();
 
 		virtual void Move() override;
-		void Move(SDL_Surface* windowSurface);
+		void Move(Mixer* mixerHandle, SDL_Surface* windowSurface);
 		virtual void Render(SDL_Renderer* renderer, float speedFactor = 1.0f) override;
 		void Render(SDL_Renderer* renderer, int offsetX, int offsetY, float speedFactor = 1.0f);
 		void SetStatus(CharacterStatusFlag status);

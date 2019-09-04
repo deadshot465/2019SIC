@@ -54,6 +54,9 @@ void ecc::Enemy::Move(int moveY)
 {
 	for (const auto& image : m_images) {
 		image->MoveDestinationLocation(m_enemyRushSpeed, moveY);
+		if (image->m_destinationLocation.y > 640) {
+			image->m_destinationLocation.y = 640;
+		}
 	}
 }
 

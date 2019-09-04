@@ -78,11 +78,11 @@ void ecc::GameEngine::UpdateCharacters(int offsetX, int offsetY, SDL_Surface* wi
 
 	if (m_characterIndex == 0) {
 		m_father->Jump();
-		m_father->Move(windowSurface);
+		m_father->Move(m_mixer.get(), windowSurface);
 	}
 	else {
 		m_daughter->Jump();
-		m_daughter->Move(windowSurface);
+		m_daughter->Move(m_mixer.get(), windowSurface);
 	}
 
 	m_daughter->Move();
@@ -122,6 +122,7 @@ void ecc::GameEngine::UpdateCharacters(int offsetX, int offsetY, SDL_Surface* wi
 		if (m_father->CheckAttackCollision(iter->get()->GetCollisionBox())) {
 			iter = m_enemies.erase(iter);
 			++m_combo;
+			m_mixer->PlaySound(SoundList::Strike, 1);
 		}
 		else {
 			++iter;
@@ -713,6 +714,7 @@ void ecc::GameEngine::GenerateEnemy()
 	if (duration > random_seconds) {
 		auto random_index = GetRandomInt(0, 5);
 		LoadEnemy(RandomEnemyPositions[random_index].x, RandomEnemyPositions[random_index].y, 3.5f);
+		m_mixer->PlaySound(SoundList::EnemyRealize, 1);
 		random_seconds = GetRandomInt(lower_bound, upper_bound);
 		start_time = current_time;
 	}
@@ -851,6 +853,7 @@ void ecc::GameEngine::Render(SDL_Surface* windowSurface, Scene scene)
 
 	if (is_daughter_hit) {
 		m_currentGameStatus = GameStatus::GameOver;
+		m_mixer->PlaySound(SoundList::Scream, 1);
 		return;
 	}
 
@@ -859,6 +862,7 @@ void ecc::GameEngine::Render(SDL_Surface* windowSurface, Scene scene)
 		if (m_father->CheckCollision(iter->get()->GetCollisionBox())) {
 			m_hp -= 50;
 			iter = m_enemies.erase(iter);
+			m_combo = 0;
 			break;
 		}
 		else {
