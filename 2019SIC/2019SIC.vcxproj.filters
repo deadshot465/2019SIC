@@ -63,6 +63,9 @@
     <ClCompile Include="SceneManager.cpp">
       <Filter>來源檔案</Filter>
     </ClCompile>
+    <ClCompile Include="Mixer.cpp">
+      <Filter>來源檔案</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Window.h">
@@ -111,6 +114,9 @@
       <Filter>標頭檔</Filter>
     </ClInclude>
     <ClInclude Include="SceneManager.h">
+      <Filter>標頭檔</Filter>
+    </ClInclude>
+    <ClInclude Include="Mixer.h">
       <Filter>標頭檔</Filter>
     </ClInclude>
   </ItemGroup>

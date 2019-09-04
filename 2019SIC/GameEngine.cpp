@@ -35,7 +35,7 @@ ecc::TileCoordinatesSet ecc::GameEngine::CalculateTileCoordinates(int totalWidth
 
 void ecc::GameEngine::GetAllWalkableTiles()
 {
-	for (const auto& tile : m_tileSet[1]) {
+	for (const auto& tile : m_tileSet[0]) {
 		if (tile->IsWalkable()) {
 			m_walkableTiles.emplace_back(tile->GetCollisionBox());
 		}
@@ -64,7 +64,7 @@ void ecc::GameEngine::UpdateCharacters(int offsetX, int offsetY, SDL_Surface* wi
 {
 	if (!m_father || !m_daughter) return;
 
-	for (const auto& tile : m_climbableTiles) {
+	/*for (const auto& tile : m_climbableTiles) {
 		if (m_characterIndex == 0) {
 			if (m_father->CheckCollision(tile)) {
 				
@@ -102,22 +102,23 @@ void ecc::GameEngine::UpdateCharacters(int offsetX, int offsetY, SDL_Surface* wi
 				}
 			}
 		}
-	}
+	}*/
 
 	auto father_position = m_father->GetCurrentDestination();
 	auto daughter_position = m_daughter->GetCurrentDestination();
 
 	if (m_characterIndex == 0) {
 		m_father->Jump();
-		auto walkable_area_found = false;
+		m_father->Move(windowSurface);
+		/*auto walkable_area_found = false;
 		for (const auto& tile : m_walkableTiles) {
 			if (m_father->CheckCollision(tile)) {
 				m_father->Move(windowSurface);
 				walkable_area_found = true;
 			}
-		}
-		auto blocked_area_found = false;
-		if (!walkable_area_found) {
+		}*/
+		//auto blocked_area_found = false;
+		/*if (!walkable_area_found) {
 			for (const auto& tile : m_blockedTiles) {
 				if (m_father->CheckCollision(tile)) {
 					blocked_area_found = true;
@@ -125,15 +126,16 @@ void ecc::GameEngine::UpdateCharacters(int offsetX, int offsetY, SDL_Surface* wi
 			}
 			if (!blocked_area_found)
 				m_father->Fall();
-		}
+		}*/
 	}
 	else {
 		m_daughter->Jump();
-		for (const auto& tile : m_walkableTiles) {
+		m_daughter->Move(windowSurface);
+		/*for (const auto& tile : m_walkableTiles) {
 			if (m_daughter->CheckCollision(tile)) {
 				m_daughter->Move(windowSurface);
 			}
-		}
+		}*/
 	}
 
 	m_father->Render(m_renderer, offsetX,
@@ -142,7 +144,7 @@ void ecc::GameEngine::UpdateCharacters(int offsetX, int offsetY, SDL_Surface* wi
 	m_daughter->Render(m_renderer, offsetX,
 		offsetY, 0.0f);
 
-	for (const auto& key : m_keys) {
+	/*for (const auto& key : m_keys) {
 
 		if (!key->GetActiveStatus()) continue;
 
@@ -157,12 +159,22 @@ void ecc::GameEngine::UpdateCharacters(int offsetX, int offsetY, SDL_Surface* wi
 		if (result) {
 			key->SetActive(false);
 		}
-	}
+	}*/
 
-	for (const auto& window : m_switchableWindows) {
+	/*for (const auto& window : m_switchableWindows) {
 		if (m_father->CheckCollision(window->GetCollisionBox()) && window->IsLit()) {
 			m_currentGameStatus = GameStatus::GameOver;
 			break;
+		}
+	}*/
+
+	auto iter = m_enemies.begin();
+	while (iter != m_enemies.end()) {
+		if (m_father->CheckAttackCollision(iter->get()->GetCollisionBox())) {
+			iter = m_enemies.erase(iter);
+		}
+		else {
+			++iter;
 		}
 	}
 }
@@ -175,7 +187,7 @@ void ecc::GameEngine::CreateTiles(size_t imageIndex, int totalWidth, int totalHe
 	auto dst_rect = SDL_Rect();
 	bool is_lit = false;
 
-	auto tex_coord_index = m_tileCoordinateMapping[imageIndex];
+	auto tex_coord_index = m_tileCoordinateMapping[0];
 	auto tex_coord = m_tileCoordinates[tex_coord_index];
 	auto total_rows = tex_coord.size();
 	auto total_columns = tex_coord[0].size();
@@ -183,7 +195,7 @@ void ecc::GameEngine::CreateTiles(size_t imageIndex, int totalWidth, int totalHe
 	int y = 0;
 	auto tiles = std::vector<std::shared_ptr<Tile>>();
 
-	for (const auto& row : m_maps[imageIndex]) {
+	for (const auto& row : m_maps[0]) {
 		for (const auto& column : row) {
 			for (auto current_row = static_cast<int64_t>(total_rows) - 2ll; current_row >= 0ll; current_row -= 2ll) {
 				auto offset = current_row * total_columns;
@@ -213,19 +225,18 @@ void ecc::GameEngine::CreateTiles(size_t imageIndex, int totalWidth, int totalHe
 			bool climbable = false;
 			bool walkable = false;
 			bool blocked = false;
-			if (imageIndex == 1) {
+
+			if (column == 0 || column == 58 || column == 12 || column == 70) {
+				walkable = true;
+			}
+			/*if (imageIndex == 1) {
 				if (column == 54 || column == 55 || column == 66 || column == 67) {
 					climbable = true;
-				}
-				if ((column >= 0 && column <= 23 &&
-					column != 1 && column != 13 && column != 6 && column != 18 &&
-					column != 7 && column != 19) || (column == 56 || column == 68)) {
-					walkable = true;
 				}
 				if (column == 1 || column == 6 || column == 7 || column == 13 || column == 18 || column == 19) {
 					blocked = true;
 				}
-			}
+			}*/
 
 			auto tile = std::make_shared<Tile>(src_rect_on, src_rect_off, dst_rect,
 				TileType::Normal, is_lit, climbable, walkable, blocked);
@@ -377,10 +388,46 @@ void ecc::GameEngine::GetEnemyMoveBounds(Enemy* enemy, int& leftBound, int& righ
 void ecc::GameEngine::MoveEnemy(SDL_Surface* windowSurface)
 {
 	for (auto& enemy : m_enemies) {
-		/*std::cout << "Movable Between: " << std::boolalpha << CheckMovableBetween(enemy->GetCurrentDestination(),
-			(m_characterIndex == 0) ? m_father->GetCurrentDestination() : m_daughter->GetCurrentDestination()) << "\n";*/
-		enemy->Move(m_characterIndex == 0 ? m_father->GetCurrentDestination() :
-			m_daughter->GetCurrentDestination(), false, windowSurface);
+
+		SDL_SetRenderDrawColor(m_renderer, 0xFF, 0x00, 0x00, 0xFF);
+		SDL_RenderDrawRect(m_renderer, &(enemy->GetCollisionBox()));
+		SDL_SetRenderDrawColor(m_renderer, 0xFF, 0xFF, 0xFF, 0xFF);
+
+		auto collided = std::any_of(m_walkableTiles.begin(), m_walkableTiles.end(),
+			[&](const SDL_Rect& rect) {
+				return enemy->CheckCollision(rect);
+			});
+
+		if (!collided) {
+			enemy->Move(24);
+		}
+		else {
+			enemy->Move();
+		}
+
+		auto change_direction = std::any_of(m_collisionBoxes.begin(), m_collisionBoxes.end(),
+			[&](const SDL_Rect& rect) {
+				return enemy->CheckCollision(rect);
+			});
+
+		if (change_direction) {
+			enemy->FlipDirection();
+			for (auto i = 0; i < 10; ++i) {
+				enemy->Move();
+			}
+		}
+
+		auto enemy_pos = enemy->GetCurrentDestination();
+		auto daughter_pos = m_daughter->GetCurrentDestination();
+		if (enemy_pos.y >= daughter_pos.y) {
+			if (enemy_pos.x < daughter_pos.x) {
+				enemy->ForceSetDirection(1, SDL_FLIP_NONE);
+			}
+			else {
+				enemy->ForceSetDirection(-1, SDL_FLIP_HORIZONTAL);
+			}
+		}
+		
 		enemy->Render(m_renderer);
 	}
 }
@@ -491,6 +538,31 @@ void ecc::GameEngine::LoadSprite(const std::string& fileName, int xPos, int yPos
 	iter->get()->LoadSprite(m_renderer, fileName, xPos, yPos, transparency, magnifier);
 }
 
+void ecc::GameEngine::LoadAnimatedSprite(const std::string& fileName, int xPos, int yPos, bool transparency, float magnifier, int clipX, int clipY)
+{
+	m_animatedSprite = std::make_unique<Image>();
+	m_animatedSprite->LoadAnimatedSprite(m_renderer, fileName, xPos, yPos, transparency,
+		magnifier, clipX, clipY);
+}
+
+void ecc::GameEngine::PlayAnimatedSprite()
+{
+	static auto begin_time = std::chrono::high_resolution_clock::now();
+	static auto current_frame = 0;
+	static auto frame_count = 5;
+	auto current_time_ = std::chrono::high_resolution_clock::now();
+	auto duration_ = std::chrono::duration<float, std::chrono::seconds::period>(current_time_ - begin_time).count();
+
+	if (duration_ > 0.12f) {
+		++current_frame;
+		current_frame = current_frame % frame_count;
+		m_animatedSprite->SetTexCoord(current_frame * 864, 0);
+		begin_time = current_time_;
+	}
+
+	m_animatedSprite->Render(m_renderer);
+}
+
 ecc::GameEngine::GameEngine(SDL_Window* window, SDL_Surface* windowSurface)
 {
 	IMG_Init(IMG_INIT_JPG | IMG_INIT_PNG);
@@ -499,6 +571,7 @@ ecc::GameEngine::GameEngine(SDL_Window* window, SDL_Surface* windowSurface)
 	m_camera = std::make_unique<Camera>(windowSurface);
 	m_objectFactory = std::make_unique<ObjectFactory>(m_renderer);
 	//GenerateKeyAndDoors();
+	m_mixer = std::make_unique<Mixer>();
 }
 
 ecc::GameEngine::~GameEngine()
@@ -573,34 +646,41 @@ void ecc::GameEngine::LoadMap(const std::string& mapName)
 	m_currentMapHeight = static_cast<int>(number_array.size());
 }
 
-void ecc::GameEngine::LoadTileSet(SDL_Surface* surface)
+void ecc::GameEngine::LoadTileSet(SDL_Surface* surface, bool loadBackground, bool loadForeground)
 {
-	size_t index = m_images.size();
-	m_images.emplace_back(std::make_unique<Image>());
-	auto iter = m_images.end();
-	--iter;
-	iter->get()->LoadImage(m_renderer, TILESET_FILENAME.backgroundFile, true, true);
+	size_t index = 0;
 
-	auto background_coordinates = CalculateTileCoordinates(iter->get()->m_width, iter->get()->m_height);
-	m_tileCoordinateMapping.insert(
-		std::pair<size_t, size_t>(index, m_tileCoordinates.size()));
-	m_tileCoordinates.emplace_back(background_coordinates);
-	CreateTiles(index, iter->get()->m_width, iter->get()->m_height, surface);
+	if (loadBackground) {
+		index = m_images.size();
+		m_images.emplace_back(std::make_unique<Image>());
+		auto iter = m_images.end();
+		--iter;
+		iter->get()->LoadImage(m_renderer, TILESET_FILENAME.backgroundFile, true, true);
 
-	index = m_images.size();
-	m_images.emplace_back(std::make_unique<Image>());
-	iter = m_images.end();
-	--iter;
-	iter->get()->LoadImage(m_renderer, TILESET_FILENAME.foregroundFile, true, true);
+		auto background_coordinates = CalculateTileCoordinates(iter->get()->m_width, iter->get()->m_height);
+		m_tileCoordinateMapping.insert(
+			std::pair<size_t, size_t>(index, m_tileCoordinates.size()));
+		m_tileCoordinates.emplace_back(background_coordinates);
+		CreateTiles(index, iter->get()->m_width, iter->get()->m_height, surface);
+	}
 
-	auto foreground_coordinates = CalculateTileCoordinates(iter->get()->m_width, iter->get()->m_height);
-	m_tileCoordinateMapping.insert(
-		std::pair<size_t, size_t>(index, m_tileCoordinates.size()));
-	m_tileCoordinates.emplace_back(foreground_coordinates);
-	CreateTiles(index, iter->get()->m_width, iter->get()->m_height, surface);
+	if (loadForeground) {
+		index = m_images.size();
+		m_images.emplace_back(std::make_unique<Image>());
+		auto iter = m_images.end();
+		--iter;
+		iter->get()->LoadImage(m_renderer, TILESET_FILENAME.foregroundFile, true, true);
+
+		auto foreground_coordinates = CalculateTileCoordinates(iter->get()->m_width, iter->get()->m_height);
+		m_tileCoordinateMapping.insert(
+			std::pair<size_t, size_t>(index, m_tileCoordinates.size()));
+		m_tileCoordinates.emplace_back(foreground_coordinates);
+		CreateTiles(index, iter->get()->m_width, iter->get()->m_height, surface);
+	}
+	
 	GetAllWalkableTiles();
-	GetAllBlockedTiles();
-	GetAllClimbableTiles();
+	//GetAllBlockedTiles();
+	//GetAllClimbableTiles();
 }
 
 void ecc::GameEngine::LoadCharacter(Character::CharacterFlag characterFlag,
@@ -638,15 +718,63 @@ const ecc::GameStatus& ecc::GameEngine::GetCurrentGameStatus() const noexcept
 	return m_currentGameStatus;
 }
 
-void ecc::GameEngine::LoadEnemy(const std::string& waitAnimationFileName,
-	const std::string& moveAnimationFileName,
-	const std::string& attackAnimationFileName,
-	int xPos, int yPos, float speed, int moveRange)
+void ecc::GameEngine::CreateCollisionBox(int xPos, int yPos, int width, int height)
+{
+	auto rect = SDL_Rect();
+	rect.x = xPos;
+	rect.y = yPos;
+	rect.w = width;
+	rect.h = height;
+	m_collisionBoxes.emplace_back(rect);
+}
+
+void ecc::GameEngine::GenerateEnemy()
+{
+	static auto start_time = std::chrono::high_resolution_clock::now();
+	static auto duration_countdown_base = std::chrono::high_resolution_clock::now();
+	
+	auto current_time = std::chrono::high_resolution_clock::now();
+	auto duration = std::chrono::duration<float, std::chrono::seconds::period>(current_time - start_time).count();
+	auto countdown_timer = std::chrono::duration<float, std::chrono::seconds::period>(current_time - duration_countdown_base).count();
+	
+	static auto lower_bound = 5;
+	static auto upper_bound = 8;
+
+	static auto random_seconds = GetRandomInt(lower_bound, upper_bound);
+	if (duration > random_seconds) {
+		auto random_index = GetRandomInt(0, 5);
+		LoadEnemy(RandomEnemyPositions[random_index].x, RandomEnemyPositions[random_index].y, 3.5f);
+		random_seconds = GetRandomInt(1, 5);
+		start_time = current_time;
+	}
+	if (countdown_timer > 15.0f && lower_bound != 0 && upper_bound != 3) {
+		--lower_bound;
+		--upper_bound;
+		duration_countdown_base = current_time;
+	}
+}
+
+void ecc::GameEngine::LoadHpBar(const std::string& fileName, int xPos, int yPos, bool transparency, float magnifier)
+{
+	m_hpBar = std::make_unique<Image>();
+	m_hpBar->LoadSprite(m_renderer, fileName, xPos, yPos, transparency, magnifier);
+}
+
+void ecc::GameEngine::LoadHpChunk(const std::string& fileName, int xPos, int yPos, bool transparency, float magnifier)
+{
+	m_hpChunk.emplace_back(std::make_unique<Image>());
+	auto iter = m_hpChunk.end();
+	--iter;
+	iter->get()->LoadSprite(m_renderer, fileName, xPos, yPos, transparency, magnifier);
+}
+
+void ecc::GameEngine::LoadEnemy(int xPos, int yPos, float speed)
 {
 	m_enemies.emplace_back(std::make_unique<Enemy>(m_renderer,
-		waitAnimationFileName, moveAnimationFileName,
-		attackAnimationFileName,
-		xPos, yPos, speed, 4.5, 3.0, 0.45, moveRange));
+		ENEMY_ANIMATIONS.idleAnimation, ENEMY_ANIMATIONS.moveAnimation,
+		ENEMY_ANIMATIONS.attackAnimation,
+		xPos, yPos, speed,
+		ENEMY_PARAMETERS.idleSpeed, ENEMY_PARAMETERS.moveSpeed, ENEMY_PARAMETERS.attackSpeed));
 }
 
 void ecc::GameEngine::Clear(Uint8 r, Uint8 g, Uint8 b, Uint8 a)
@@ -657,30 +785,32 @@ void ecc::GameEngine::Clear(Uint8 r, Uint8 g, Uint8 b, Uint8 a)
 
 void ecc::GameEngine::Render(SDL_Surface* windowSurface, Scene scene)
 {
-	//int camera_x_pos = 0;
-	//int camera_y_pos = 0;
-	//if (m_characterIndex == 0) {
-	//	camera_x_pos = (m_father->GetCurrentDestination().x + (CHARACTER_SPRITE_WIDTH / 2)) - (m_camera->GetCollisionBox().w / 2);
-	//	camera_y_pos = (m_father->GetCurrentDestination().y + (CHARACTER_SPRITE_HEIGHT / 2)) - (m_camera->GetCollisionBox().h / 2);
-	//}
-	//else {
-	//	camera_x_pos = (m_daughter->GetCurrentDestination().x + (CHARACTER_SPRITE_WIDTH / 2)) - (m_camera->GetCollisionBox().w / 2);
-	//	camera_y_pos = (m_daughter->GetCurrentDestination().y + (CHARACTER_SPRITE_HEIGHT / 2)) - (m_camera->GetCollisionBox().h / 2);
-	//}
-	//m_camera->SetCollisionBox(camera_x_pos, camera_y_pos, m_currentMapWidth * TILE_WIDTH, m_currentMapHeight * TILE_HEIGHT);
-
-	//if (!m_cameraRtv) {
-	//	Uint32 format = 0;
-	//	int access = 0;
-	//	int w = 0;
-	//	int h = 0;
-	//	SDL_QueryTexture(m_defaultRtv, &format, &access, &w, &h);
-	//	m_cameraRtv = SDL_CreateTexture(m_renderer, format, SDL_TEXTUREACCESS_TARGET,
-	//		m_camera->GetCollisionBox().w, m_camera->GetCollisionBox().h);
-	//}
-
 	
+	for (const auto& image : m_images) {
+		if (image->m_isTile) continue;
+
+		image->Render(m_renderer);
+	}
+
+	if (scene == Scene::GameOver) {
+		SDL_RenderPresent(m_renderer);
+		return;
+	}
+
+	if (scene == Scene::Defense) {
+		PlayAnimatedSprite();
+	}
+
 	RenderTiles(windowSurface, { 0, 0, 0, 0 });
+	
+#ifdef NDEBUG
+#else
+	for (const auto& box : m_collisionBoxes) {
+		SDL_SetRenderDrawColor(m_renderer, 0x66, 0x66, 0x66, 0xFF);
+		SDL_RenderDrawRect(m_renderer, &box);
+		SDL_SetRenderDrawColor(m_renderer, 0xFF, 0xFF, 0xFF, 0xFF);
+	}
+#endif
 	
 	////SDL_RenderCopy(m_renderer, m_tileRtv, nullptr, nullptr);
 
@@ -706,25 +836,45 @@ void ecc::GameEngine::Render(SDL_Surface* windowSurface, Scene scene)
 
 	UpdateCharacters(0, 0, windowSurface);
 
-	//MoveEnemy(windowSurface);
-
-	for (const auto& image : m_images) {
-		if (image->m_isTile) continue;
-
-		image->Render(m_renderer);
-	}
+	GenerateEnemy();
+	MoveEnemy(windowSurface);
 
 #ifdef NDEBUG
 #else
 	if (m_father && m_daughter) {
 		SDL_SetRenderDrawColor(m_renderer, 0xFF, 0x00, 0x00, 0xFF);
-		SDL_RenderDrawRect(m_renderer, &(m_father->GetCollisionBox()));
+		SDL_RenderDrawRect(m_renderer, &(m_father->GetAttackCollisionBox()));
 		SDL_SetRenderDrawColor(m_renderer, 0xFF, 0xFF, 0x00, 0xFF);
 		SDL_RenderDrawRect(m_renderer, &(m_daughter->GetCollisionBox()));
 	}
 #endif
 
+	if (m_hpBar)
+		m_hpBar->Render(m_renderer);
+
+	if (!m_hpChunk.empty()) {
+		float percentage = static_cast<float>(m_hp) / 500.0f;
+		float show_percentage = percentage * 149.0f;
+		for (auto i = 0; i < static_cast<size_t>(show_percentage); ++i) {
+			m_hpChunk[i]->Render(m_renderer);
+		}
+	}
+
 	SDL_RenderPresent(m_renderer);
+
+	for (const auto& enemy : m_enemies) {
+		if (m_daughter->CheckCollision(enemy->GetCollisionBox())) {
+			m_currentGameStatus = GameStatus::GameOver;
+			return;
+		}
+	}
+
+	for (const auto& enemy : m_enemies) {
+		if (m_father->CheckCollision(enemy->GetCollisionBox())) {
+			m_hp -= 50;
+			break;
+		}
+	}
 }
 
 void ecc::GameEngine::SwitchLight()

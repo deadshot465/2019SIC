@@ -6,9 +6,8 @@ ecc::Enemy::Enemy(SDL_Renderer* renderer, const std::string& waitAnimationFileNa
 	const std::string& moveAnimationFileName,
 	const std::string& attackAnimationFileName,
 	int xPos, int yPos, float speed,
-	double idleSpeed, double moveSpeed, double attackSpeed,
-	int moveRange) :
-	m_enemyRushSpeed(4 * speed), m_enemyMoveRange(moveRange), m_originalX(xPos)
+	double idleSpeed, double moveSpeed, double attackSpeed) :
+	m_enemyRushSpeed(4 * speed), m_originalX(xPos)
 {
 	m_images.resize(3);
 	m_frameCounts.resize(3);
@@ -21,7 +20,7 @@ ecc::Enemy::Enemy(SDL_Renderer* renderer, const std::string& waitAnimationFileNa
 	m_images[1]->LoadCharacterSprites(renderer, moveAnimationFileName, ImageIndexFlag::Move, xPos, yPos);
 	
 	m_images[2] = std::make_unique<Image>();
-	m_images[2]->LoadCharacterSprites(renderer, attackAnimationFileName, ImageIndexFlag::Attack, xPos, yPos);
+	m_images[2]->LoadCharacterSprites(renderer, attackAnimationFileName, ImageIndexFlag::Jump, xPos, yPos);
 
 	m_frameCounts[0] = m_images[0]->m_width / CHARACTER_SPRITE_WIDTH;
 	m_frameCounts[1] = m_images[1]->m_width / CHARACTER_SPRITE_WIDTH;
@@ -34,6 +33,8 @@ ecc::Enemy::Enemy(SDL_Renderer* renderer, const std::string& waitAnimationFileNa
 	m_speed = speed;
 	m_startTime = std::chrono::high_resolution_clock::now();
 
+	m_currentImageIndex = ImageIndexFlag::Attack;
+
 	SetCollisionBox();
 }
 
@@ -44,11 +45,21 @@ ecc::Enemy::~Enemy()
 
 void ecc::Enemy::Move()
 {
+	for (const auto& image : m_images) {
+		image->MoveDestinationLocation(m_enemyRushSpeed, 0);
+	}
+}
+
+void ecc::Enemy::Move(int moveY)
+{
+	for (const auto& image : m_images) {
+		image->MoveDestinationLocation(m_enemyRushSpeed, moveY);
+	}
 }
 
 void ecc::Enemy::Move(const SDL_Rect& playerPosition, bool foundPlayer, SDL_Surface* windowSurface)
 {
-	if (!foundPlayer) {
+	/*if (!foundPlayer) {
 		if (m_moveFinished) {
 			StartMove();
 		}
@@ -122,7 +133,7 @@ void ecc::Enemy::Move(const SDL_Rect& playerPosition, bool foundPlayer, SDL_Surf
 				break;
 			}
 		}
-	}
+	}*/
 }
 
 void ecc::Enemy::Attack()
@@ -131,16 +142,17 @@ void ecc::Enemy::Attack()
 
 void ecc::Enemy::SetCollisionBox()
 {
-	m_collisionBox.w = CHARACTER_SPRITE_WIDTH / 2;
-	m_collisionBox.h = CHARACTER_SPRITE_HEIGHT;
-	m_collisionBox.x = m_images[0]->m_destinationLocation.x + (CHARACTER_SPRITE_WIDTH / 4);
-	m_collisionBox.y = m_images[0]->m_destinationLocation.y;
+	m_collisionBox.w = 48;
+	m_collisionBox.h = 96;
+	m_collisionBox.x = m_images[0]->m_destinationLocation.x + 24;
+	m_collisionBox.y = m_images[0]->m_destinationLocation.y + 32;
 }
 
 void ecc::Enemy::Render(SDL_Renderer* renderer, float speedFactor)
 {
 	Animate(speedFactor);
 	m_images[static_cast<size_t>(m_currentImageIndex)]->Render(renderer, m_flipMode);
+	SetCollisionBox();
 }
 
 void ecc::Enemy::Animate(float speedFactor)
@@ -178,6 +190,18 @@ void ecc::Enemy::StartMove() noexcept
 {
 	m_moveFinished = false;
 	m_targetDestination = m_originalX + (m_enemyMoveRange * m_nextDestination * (TILE_WIDTH * 2));
+}
+
+void ecc::Enemy::FlipDirection() noexcept
+{
+	m_enemyRushSpeed = -m_enemyRushSpeed;
+	m_flipMode = (m_flipMode == SDL_FLIP_NONE) ? SDL_FLIP_HORIZONTAL : SDL_FLIP_NONE;
+}
+
+void ecc::Enemy::ForceSetDirection(int direction, SDL_RendererFlip flipMode)
+{
+	m_enemyRushSpeed = direction * std::abs(m_enemyRushSpeed);
+	m_flipMode = flipMode;
 }
 
 bool ecc::Enemy::IsMoveFinished() const noexcept

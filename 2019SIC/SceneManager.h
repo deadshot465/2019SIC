@@ -31,6 +31,11 @@ namespace ecc {
 		
 		inline static const std::string TITLE_SCREEN_FILENAME = "texture/sprite/cover1.png";
 		inline static const std::string GAMEOVER_SCREEN_FILENAME = "texture/sprite/gameover.png";
+		inline static const std::string STATIC_BACKGROUND_FILENAME = "texture/sprite/final bg.png";
+		inline static const std::string DYNAMIC_BACKGROUND_FILENAME = "texture/sprite/final bg.png";
+		inline static const std::string HP_BAR_FILENAME = "texture/sprite/healthbar.png";
+		inline static const std::string HP_CHUNK_FILENAME = "texture/sprite/HP chunk.png";
+		inline static const std::string DEFENSE_FILENAME = "map/Stage_DefenceFG.txt";
 
 		std::unique_ptr<GameEngine> m_gameEngine = nullptr;
 		
@@ -39,7 +44,7 @@ namespace ecc {
 		SceneManager(SDL_Window* window, SDL_Surface* surface);
 		~SceneManager();
 
-		void LoadScene(SDL_Window* window, SDL_Surface* surface, Scene scene);
+		void LoadScene(SDL_Window* window, SDL_Surface** surface, Scene scene);
 		void Render(SDL_Surface* surface, float scaleX, float scaleY);
 
 		const Scene& GetCurrentScene() const noexcept;

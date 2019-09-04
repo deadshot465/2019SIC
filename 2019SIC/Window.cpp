@@ -29,7 +29,7 @@ ecc::GameWindow::GameWindow(const std::string& title, int width, int height,
 	m_surface = SDL_GetWindowSurface(m_window);
 
 	m_sceneManager = std::make_unique<SceneManager>(m_window, m_surface);
-	m_sceneManager->LoadScene(m_window, m_surface, Scene::Title);
+	m_sceneManager->LoadScene(m_window, &m_surface, Scene::Title);
 
 	/*
 
@@ -74,19 +74,27 @@ void ecc::GameWindow::Broadcast()
 				switch (m_sceneManager->GetCurrentScene())
 				{
 				case Scene::Title:
-					m_sceneManager->LoadScene(m_window, m_surface, Scene::Hallway1);
+					m_sceneManager->LoadScene(m_window, &m_surface, Scene::Hallway1);
 					break;
 				case Scene::Hallway1:
-					m_sceneManager->LoadScene(m_window, m_surface, Scene::Hallway2);
+					m_sceneManager->LoadScene(m_window, &m_surface, Scene::Hallway2);
 					break;
 				case Scene::Hallway2:
-					m_sceneManager->LoadScene(m_window, m_surface, Scene::Hallway3);
+					m_sceneManager->LoadScene(m_window, &m_surface, Scene::Hallway3);
 					break;
 				case Scene::Hallway3:
-					m_sceneManager->LoadScene(m_window, m_surface, Scene::Stage1);
+					m_sceneManager->LoadScene(m_window, &m_surface, Scene::Stage1);
 					break;
 				case Scene::Stage1:
-					m_sceneManager->LoadScene(m_window, m_surface, Scene::Stage2);
+					m_sceneManager->LoadScene(m_window, &m_surface, Scene::Stage2);
+					break;
+				case Scene::Stage2:
+					m_sceneManager->LoadScene(m_window, &m_surface, Scene::Stage3);
+					break;
+				case Scene::Stage3:
+					m_sceneManager->LoadScene(m_window, &m_surface, Scene::Defense);
+					break;
+				case Scene::Defense:
 					break;
 				default:
 					break;
@@ -110,7 +118,7 @@ void ecc::GameWindow::Broadcast()
 	m_sceneManager->Render(m_surface, m_scaleX, m_scaleY);
 	
 	if (m_sceneManager->GetCurrentGameStatus() == GameStatus::GameOver) {
-		m_sceneManager->LoadScene(m_window, m_surface, Scene::GameOver);
+		m_sceneManager->LoadScene(m_window, &m_surface, Scene::GameOver);
 	}
 }
 

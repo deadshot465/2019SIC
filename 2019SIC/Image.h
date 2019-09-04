@@ -27,6 +27,8 @@ namespace ecc {
 			int xPos, int yPos, int texWidth, int texHeight);
 		
 		void LoadSprite(SDL_Renderer* renderer, const std::string& fileName, int xPos, int yPos, bool transparency = true, float magnifier = 1.0f);
+		void LoadAnimatedSprite(SDL_Renderer* renderer, const std::string& fileName,
+			int xPos, int yPos, bool transparency, float magnifier, int clipX, int clipY);
 		void LoadCharacterSprites(SDL_Renderer* renderer, const std::string& fileName,
 			ecc::ImageIndexFlag imageFlag, int xPos, int yPos);
 

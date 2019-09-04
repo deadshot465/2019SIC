@@ -46,6 +46,16 @@ void ecc::Image::LoadSprite(SDL_Renderer* renderer, const std::string& fileName,
 	m_destinationLocation = { xPos, yPos, static_cast<int>(width), static_cast<int>(height) };
 }
 
+void ecc::Image::LoadAnimatedSprite(SDL_Renderer* renderer, const std::string& fileName, int xPos, int yPos, bool transparency, float magnifier, int clipX, int clipY)
+{
+	LoadImage(renderer, fileName, transparency, false);
+
+	m_texCoord = { 0, 0, clipX, clipY };
+	float width = clipX * magnifier;
+	float height = clipY * magnifier;
+	m_destinationLocation = { xPos, yPos, static_cast<int>(width), static_cast<int>(height) };
+}
+
 void ecc::Image::LoadCharacterSprites(SDL_Renderer* renderer, const std::string& fileName,
 	ecc::ImageIndexFlag imageFlag, int xPos, int yPos)
 {

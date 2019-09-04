@@ -46,6 +46,9 @@ namespace ecc {
 
 		// ICollidable ‚ğ‰î‚µ‚ÄŒp³‚³‚ê‚Ü‚µ‚½
 		virtual void SetCollisionBox() override;
+		void SetAttackCollisionBox();
+		const SDL_Rect& GetAttackCollisionBox() const noexcept;
+		bool CheckAttackCollision(const SDL_Rect& other) const noexcept;
 
 		// IRenderable ‚ğ‰î‚µ‚ÄŒp³‚³‚ê‚Ü‚µ‚½
 		virtual const SDL_Rect& GetCurrentDestination() override;
@@ -59,6 +62,7 @@ namespace ecc {
 		CharacterStatusFlag m_statusFlag = {};
 		ImageIndexFlag m_currentImageIndex = ImageIndexFlag::Idle;
 		CharacterFlag m_characterFlag = {};
+		SDL_Rect m_attackCollisionBox = {};
 
 		bool m_animationStarted = false;
 		unsigned int m_animationTimer = 0;

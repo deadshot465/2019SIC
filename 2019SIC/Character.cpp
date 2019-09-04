@@ -135,6 +135,7 @@ void ecc::Character::Render(SDL_Renderer* renderer, float speedFactor)
 	Animate(speedFactor);
 	m_images[static_cast<size_t>(m_currentImageIndex)]->Render(renderer, m_flipMode);
 	SetCollisionBox();
+	SetAttackCollisionBox();
 }
 
 void ecc::Character::Render(SDL_Renderer* renderer, int offsetX, int offsetY, float speedFactor)
@@ -143,6 +144,7 @@ void ecc::Character::Render(SDL_Renderer* renderer, int offsetX, int offsetY, fl
 	m_images[static_cast<size_t>(m_currentImageIndex)]->Render(renderer, m_flipMode, 0.0,
 		nullptr, offsetX, offsetY);
 	SetCollisionBox();
+	SetAttackCollisionBox();
 }
 
 void ecc::Character::SetStatus(ecc::CharacterStatusFlag status)
@@ -214,6 +216,29 @@ void ecc::Character::SetCollisionBox()
 	m_collisionBox.y =
 		m_images[static_cast<size_t>(m_currentImageIndex)]
 		->m_destinationLocation.y + 32;
+}
+
+void ecc::Character::SetAttackCollisionBox()
+{
+	m_attackCollisionBox.w = 48;
+	m_attackCollisionBox.h = 96;
+	m_attackCollisionBox.x = m_images[static_cast<size_t>(m_currentImageIndex)]
+		->m_destinationLocation.x + ((m_flipMode == SDL_FLIP_NONE) ? 88 : -12);
+	m_attackCollisionBox.y =
+		m_images[static_cast<size_t>(m_currentImageIndex)]
+		->m_destinationLocation.y + 32;
+}
+
+const SDL_Rect& ecc::Character::GetAttackCollisionBox() const noexcept
+{
+	return m_attackCollisionBox;
+}
+
+bool ecc::Character::CheckAttackCollision(const SDL_Rect& other) const noexcept
+{
+	auto key_state = SDL_GetKeyboardState(nullptr);
+
+	return SDL_HasIntersection(&m_attackCollisionBox, &other) && key_state[SDL_SCANCODE_Z];
 }
 
 const SDL_Rect& ecc::Character::GetCurrentDestination()

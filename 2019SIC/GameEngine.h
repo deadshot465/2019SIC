@@ -11,6 +11,7 @@
 #include "Helper.h"
 #include "Image.h"
 #include "Key.h"
+#include "Mixer.h"
 #include "ObjectFactory.h"
 #include "SwitchableWindow.h"
 #include "Tile.h"
@@ -35,9 +36,14 @@ namespace ecc {
 		};
 
 		inline static const CharacterAnimationSet DAUGHTER_ANIMATIONS = {
-			"texture/animation/girl_idle (dark).png", "texture/animation/girl_walk(dark).png",
-			"texture/animation/vampire_slash.png", "texture/animation/girl_jump(rise - dark).png",
-			"texture/animation/girl_jump(fall - dark).png", "texture/animation/girl_climb(dark).png",
+			"texture/animation/girl_idle.png", "texture/animation/girl_walk.png",
+			"texture/animation/vampire_slash.png", "texture/animation/girl_jump(rise).png",
+			"texture/animation/girl_jump(fall).png", "texture/animation/girl_climb.png",
+		};
+
+		inline static const EnemyAnimationSet ENEMY_ANIMATIONS = {
+			"texture/animation/vampire_enemy_idle.png", "texture/animation/vampire_enemy_walk.png",
+			"texture/animation/vampire_enemy_run.png"
 		};
 
 		inline static const CharacterAnimationParameters FATHER_PARAMETERS = {
@@ -48,17 +54,26 @@ namespace ecc {
 			1.5f, 1.0f, 0.5f, 1.0f, 1.0f, 1.0f
 		};
 
+		inline static const EnemyAnimationParameters ENEMY_PARAMETERS = {
+			4.5, 3.0, 0.45
+		};
+
+		std::vector<Vector2> RandomEnemyPositions = {
+			{16, 0}, {1584, 0}, {16, 448}, {1584, 448}, {16, 640}, {1584, 640}
+		};
+
 		SDL_Renderer* m_renderer = nullptr;
 		SDL_Texture* m_defaultRtv = nullptr;
 		SDL_Texture* m_tileRtv = nullptr;
 		SDL_Texture* m_cameraRtv = nullptr;
 
-		std::unique_ptr<Camera> m_camera = nullptr;
 		std::vector<std::unique_ptr<Image>> m_images;
-		std::unique_ptr<Character> m_father = nullptr;
-		std::unique_ptr<Character> m_daughter = nullptr;
 		std::vector<std::unique_ptr<Enemy>> m_enemies;
+		std::unique_ptr<Camera> m_camera = nullptr;
+		std::unique_ptr<Character> m_father = nullptr;
+		std::unique_ptr<Character> m_daughter = nullptr;		
 		std::unique_ptr<ObjectFactory> m_objectFactory = nullptr;
+		std::unique_ptr<Mixer> m_mixer = nullptr;
 		
 		std::vector<TileCoordinatesSet> m_tileCoordinates;
 		std::vector<std::vector<std::vector<int>>> m_maps;
@@ -97,26 +112,39 @@ namespace ecc {
 		void GenerateWindows(Scene scene);
 		void GenerateKeyAndDoors();
 
+		std::unique_ptr<Image> m_animatedSprite;
 		void ClearScene();
 		void LoadSprite(const std::string& fileName, int xPos, int yPos, bool transparency, float magnifier);
+		void LoadAnimatedSprite(const std::string& fileName, int xPos, int yPos, bool transparency,
+			float magnifier, int clipX, int clipY);
+		void PlayAnimatedSprite();
 
 		void LoadMap(const std::string& mapName);
-		void LoadTileSet(SDL_Surface* surface);
+		void LoadTileSet(SDL_Surface* surface, bool loadBackground = true, bool loadForeground = true);
 		void LoadCharacter(Character::CharacterFlag characterFlag, int xPos = 0, int yPos = 0,
 			float speed = 5.0f, ImageIndexFlag initialStatus = ImageIndexFlag::Idle);
+		void LoadEnemy(int xPos, int yPos, float speed);
 
 		GameStatus m_currentGameStatus = GameStatus::Normal;
 		const GameStatus& GetCurrentGameStatus() const noexcept;
+
+		std::vector<SDL_Rect> m_collisionBoxes;
+		void CreateCollisionBox(int xPos, int yPos, int width, int height);
+
+		void GenerateEnemy();
+
+		int m_hp = 500;
+		std::unique_ptr<Image> m_hpBar = nullptr;
+		std::vector<std::unique_ptr<Image>> m_hpChunk;
+		void LoadHpBar(const std::string& fileName, int xPos, int yPos,
+			bool transparency, float magnifier);
+		void LoadHpChunk(const std::string& fileName, int xPos, int yPos,
+			bool transparency, float magnifier);
 
 		friend SceneManager;
 	public:
 		GameEngine(SDL_Window* window, SDL_Surface* windowSurface);
 		~GameEngine();
-		
-		void LoadEnemy(const std::string& waitAnimationFileName,
-			const std::string& moveAnimationFileName,
-			const std::string& attackAnimationFileName,
-			int xPos, int yPos, float speed, int moveRange);
 
 		void Clear(Uint8 r, Uint8 g, Uint8 b, Uint8 a);
 		void Render(SDL_Surface* windowSurface, Scene scene);

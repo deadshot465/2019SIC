@@ -79,12 +79,35 @@ namespace ecc {
 		Stage1,
 		Stage2,
 		Stage3,
+		Defense,
 		GameOver
 	};
 
 	enum class GameStatus {
 		Normal,
 		GameOver
+	};
+
+	enum class SoundList {
+		Running,
+		Walking,
+		Punch1,
+		Punch2,
+		Punch3,
+		Swish,
+		Strike,
+		EnemyWating,
+		EnemyRealize,
+		Lever,
+		Curtain1,
+		Curtain2,
+		KeyPickUp,
+		KeyUnlocked,
+		DoorOpen,
+		BreakingDoor,
+		LadderStep,
+		Stairs,
+		MovingBox
 	};
 
 	struct MapPair {
@@ -101,6 +124,12 @@ namespace ecc {
 		std::string climbAnimation;
 	};
 
+	struct EnemyAnimationSet {
+		std::string idleAnimation;
+		std::string moveAnimation;
+		std::string attackAnimation;
+	};
+
 	struct CharacterAnimationParameters {
 		float idleSpeed;
 		float moveSpeed;
@@ -108,6 +137,17 @@ namespace ecc {
 		float jumpSpeed;
 		float fallSpeed;
 		float climbSpeed;
+	};
+
+	struct EnemyAnimationParameters {
+		float idleSpeed;
+		float moveSpeed;
+		float attackSpeed;
+	};
+
+	struct Vector2 {
+		int x;
+		int y;
 	};
 
 	inline void ThrowIfFailed(const std::string& message) {

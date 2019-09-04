@@ -23,12 +23,12 @@ namespace ecc {
 			const std::string& moveAnimationFileName,
 			const std::string& attackAnimationFileName,
 			int xPos, int yPos, float speed,
-			double idleSpeed, double moveSpeed, double attackSpeed,
-			int moveRange);
+			double idleSpeed, double moveSpeed, double attackSpeed);
 		~Enemy();
 
 		// IMovable ÇâÓÇµÇƒåpè≥Ç≥ÇÍÇ‹ÇµÇΩ
 		virtual void Move() override;
+		void Move(int moveY);
 		void Move(const SDL_Rect& playerPosition, bool foundPlayer, SDL_Surface* windowSurface);
 		void Attack();
 
@@ -45,6 +45,9 @@ namespace ecc {
 		virtual const SDL_Rect& GetCurrentDestination() override;
 
 		void StartMove() noexcept;
+		void FlipDirection() noexcept;
+		void ForceSetDirection(int direction, SDL_RendererFlip flipMode);
+
 		bool IsMoveFinished() const noexcept;
 	};
 }

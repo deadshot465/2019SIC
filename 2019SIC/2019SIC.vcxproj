@@ -98,7 +98,7 @@
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
-      <AdditionalDependencies>SDL2.lib;SDL2main.lib;SDL2_image.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>SDL2.lib;SDL2main.lib;SDL2_image.lib;SDL2_mixer.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
@@ -130,7 +130,7 @@
       <SubSystem>Console</SubSystem>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
-      <AdditionalDependencies>SDL2.lib;SDL2main.lib;SDL2_image.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>SDL2.lib;SDL2main.lib;SDL2_image.lib;SDL2_mixer.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
@@ -145,6 +145,7 @@
     <ClCompile Include="IRenderable.cpp" />
     <ClCompile Include="Key.cpp" />
     <ClCompile Include="main.cpp" />
+    <ClCompile Include="Mixer.cpp" />
     <ClCompile Include="ObjectFactory.cpp" />
     <ClCompile Include="SceneManager.cpp" />
     <ClCompile Include="SwitchableWindow.cpp" />
@@ -163,6 +164,7 @@
     <ClInclude Include="IMovable.h" />
     <ClInclude Include="IRenderable.h" />
     <ClInclude Include="Key.h" />
+    <ClInclude Include="Mixer.h" />
     <ClInclude Include="ObjectFactory.h" />
     <ClInclude Include="SceneManager.h" />
     <ClInclude Include="SwitchableWindow.h" />

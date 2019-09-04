@@ -11,7 +11,7 @@ ecc::SceneManager::~SceneManager()
 	m_gameEngine.reset();
 }
 
-void ecc::SceneManager::LoadScene(SDL_Window* window, SDL_Surface* surface, Scene scene)
+void ecc::SceneManager::LoadScene(SDL_Window* window, SDL_Surface** surface, Scene scene)
 {
 	switch (scene)
 	{
@@ -23,7 +23,7 @@ void ecc::SceneManager::LoadScene(SDL_Window* window, SDL_Surface* surface, Scen
 		m_currentScene = Scene::Title;
 		break;
 	case ecc::Scene::Hallway1:
-		m_gameEngine->ClearScene();
+		/*m_gameEngine->ClearScene();
 		SDL_SetWindowSize(window, 1728, 640);
 		SDL_SetWindowPosition(window, SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED);
 		m_gameEngine->LoadMap(STAGE_HALL1_FILENAME.backgroundFile);
@@ -32,9 +32,9 @@ void ecc::SceneManager::LoadScene(SDL_Window* window, SDL_Surface* surface, Scen
 		m_gameEngine->LoadCharacter(Character::CharacterFlag::Father,
 			16 * (TILE_WIDTH * 2), 2 * (TILE_HEIGHT * 2), 16.0f);
 		m_gameEngine->LoadCharacter(Character::CharacterFlag::Daughter,
-			18 * (TILE_WIDTH * 2), 2 * (TILE_HEIGHT * 2), 8.0f);
+			18 * (TILE_WIDTH * 2), 2 * (TILE_HEIGHT * 2), 8.0f);*/
 		m_currentScene = Scene::Hallway1;
-		break;
+		//break;
 	case ecc::Scene::Hallway2:
 		/*m_gameEngine->ClearScene();
 		m_gameEngine->LoadMap(STAGE_HALL2_FILENAME.backgroundFile);
@@ -50,20 +50,65 @@ void ecc::SceneManager::LoadScene(SDL_Window* window, SDL_Surface* surface, Scen
 		m_currentScene = Scene::Hallway3;
 		//break;
 	case ecc::Scene::Stage1:
-		m_gameEngine->ClearScene();
+		/*m_gameEngine->ClearScene();
 		m_gameEngine->LoadMap(STAGE_1_FILENAME.backgroundFile);
 		m_gameEngine->LoadMap(STAGE_1_FILENAME.foregroundFile);
 		m_gameEngine->LoadTileSet(surface);
 		m_gameEngine->LoadCharacter(Character::CharacterFlag::Father,
 			15 * (TILE_WIDTH * 2), 15 * (TILE_HEIGHT * 2), 16.0f);
 		m_gameEngine->LoadCharacter(Character::CharacterFlag::Daughter,
-			5 * (TILE_WIDTH * 2), 15 * (TILE_HEIGHT * 2), 8.0f);
+			5 * (TILE_WIDTH * 2), 15 * (TILE_HEIGHT * 2), 8.0f);*/
 		m_currentScene = Scene::Stage1;
-		break;
+		//break;
 	case ecc::Scene::Stage2:
-		break;
+		m_currentScene = Scene::Stage2;
+		//break;
 	case ecc::Scene::Stage3:
+		m_currentScene = Scene::Stage3;
+		//break;
+	case ecc::Scene::Defense:
+	{
+		SDL_SetWindowSize(window, 1728, 832);
+		SDL_SetWindowPosition(window, SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED);
+		*surface = SDL_GetWindowSurface(window);
+		m_gameEngine->ClearScene();
+		m_gameEngine->LoadHpBar(HP_BAR_FILENAME, 16, 16, true, 2.0f);
+
+		auto offset = 48;
+		for (auto i = 0; i < 149; ++i, offset += 4) {
+			m_gameEngine->LoadHpChunk(HP_CHUNK_FILENAME, offset, 72, true, 2.5f);
+		}
+
+		m_gameEngine->LoadAnimatedSprite(DYNAMIC_BACKGROUND_FILENAME, 0, 0, true, 2.0f, 864, 416);
+		m_gameEngine->LoadMap(DEFENSE_FILENAME);
+		m_gameEngine->LoadTileSet(*surface, false, true);
+
+#ifdef NDEBUG
+#else
+		m_gameEngine->CreateCollisionBox(768, 240,
+			2 * CHARACTER_SPRITE_WIDTH, 2 * CHARACTER_SPRITE_HEIGHT);
+		m_gameEngine->CreateCollisionBox(1584, 0,
+			1.0f * CHARACTER_SPRITE_WIDTH, 2 * CHARACTER_SPRITE_HEIGHT);
+		/*m_gameEngine->CreateCollisionBox(16, 0,
+			2 * CHARACTER_SPRITE_WIDTH, 2 * CHARACTER_SPRITE_HEIGHT);*/
+		m_gameEngine->CreateCollisionBox(1584, 448,
+			1.0f * CHARACTER_SPRITE_WIDTH, 2 * CHARACTER_SPRITE_HEIGHT);
+		m_gameEngine->CreateCollisionBox(16, 448,
+			1.0f * CHARACTER_SPRITE_WIDTH, 2 * CHARACTER_SPRITE_HEIGHT);
+		/*m_gameEngine->CreateCollisionBox(1584, 640,
+			2 * CHARACTER_SPRITE_WIDTH, 2 * CHARACTER_SPRITE_HEIGHT);
+		m_gameEngine->CreateCollisionBox(16, 640,
+			2 * CHARACTER_SPRITE_WIDTH, 2 * CHARACTER_SPRITE_HEIGHT);*/
+#endif
+
+			//m_gameEngine->LoadEnemy(16, 32, 5.0f);
+		m_gameEngine->LoadCharacter(Character::CharacterFlag::Father,
+			20 * (TILE_WIDTH * 2), 640, 16.0f);
+		m_gameEngine->LoadCharacter(Character::CharacterFlag::Daughter,
+			24 * (TILE_WIDTH * 2), 640, 8.0f);
+		m_currentScene = Scene::Defense;
 		break;
+	}
 	case ecc::Scene::GameOver:
 		m_gameEngine->ClearScene();
 		SDL_SetWindowSize(window, 1152, 810);
