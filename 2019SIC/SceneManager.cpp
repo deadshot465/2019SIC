@@ -36,19 +36,19 @@ void ecc::SceneManager::LoadScene(SDL_Window* window, SDL_Surface* surface, Scen
 		m_currentScene = Scene::Hallway1;
 		break;
 	case ecc::Scene::Hallway2:
-		m_gameEngine->ClearScene();
+		/*m_gameEngine->ClearScene();
 		m_gameEngine->LoadMap(STAGE_HALL2_FILENAME.backgroundFile);
 		m_gameEngine->LoadMap(STAGE_HALL2_FILENAME.foregroundFile);
-		m_gameEngine->LoadTileSet(surface);
+		m_gameEngine->LoadTileSet(surface);*/
 		m_currentScene = Scene::Hallway2;
-		break;
+		//break;
 	case ecc::Scene::Hallway3:
-		m_gameEngine->ClearScene();
+		/*m_gameEngine->ClearScene();
 		m_gameEngine->LoadMap(STAGE_HALL3_FILENAME.backgroundFile);
 		m_gameEngine->LoadMap(STAGE_HALL3_FILENAME.foregroundFile);
-		m_gameEngine->LoadTileSet(surface);
+		m_gameEngine->LoadTileSet(surface);*/
 		m_currentScene = Scene::Hallway3;
-		break;
+		//break;
 	case ecc::Scene::Stage1:
 		m_gameEngine->ClearScene();
 		m_gameEngine->LoadMap(STAGE_1_FILENAME.backgroundFile);
@@ -80,7 +80,6 @@ void ecc::SceneManager::Render(SDL_Surface* surface, float scaleX, float scaleY)
 {
 	m_gameEngine->Clear(0xFF, 0xFF, 0xFF, 0xFF);
 	m_gameEngine->Render(surface, m_currentScene);
-
 }
 
 const ecc::Scene& ecc::SceneManager::GetCurrentScene() const noexcept

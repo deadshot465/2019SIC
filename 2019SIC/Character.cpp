@@ -206,14 +206,14 @@ void ecc::Character::Animate(float speedFactor)
 
 void ecc::Character::SetCollisionBox()
 {
-	m_collisionBox.w = CHARACTER_SPRITE_WIDTH;
-	m_collisionBox.h = CHARACTER_SPRITE_HEIGHT / 2;
+	m_collisionBox.w = 48;
+	m_collisionBox.h = 96;
 	m_collisionBox.x =
 		m_images[static_cast<size_t>(m_currentImageIndex)]
-		->m_destinationLocation.x + TILE_WIDTH;
+		->m_destinationLocation.x + 24;
 	m_collisionBox.y =
 		m_images[static_cast<size_t>(m_currentImageIndex)]
-		->m_destinationLocation.y + (CHARACTER_SPRITE_HEIGHT + 2 * TILE_HEIGHT + (TILE_HEIGHT / 2));
+		->m_destinationLocation.y + 32;
 }
 
 const SDL_Rect& ecc::Character::GetCurrentDestination()
