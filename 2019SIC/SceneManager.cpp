@@ -61,11 +61,18 @@ void ecc::SceneManager::LoadScene(SDL_Window* window, SDL_Surface** surface, Sce
 		m_currentScene = Scene::Stage1;
 		//break;
 	case ecc::Scene::Stage2:
+		SDL_SetWindowSize(window, 642, 396);
+		SDL_SetWindowPosition(window, SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED);
+		*surface = SDL_GetWindowSurface(window);
+		m_gameEngine->ClearScene();
+		m_gameEngine->LoadSprite(TUTORIAL_1_FILENAME, 0, 0, true, 3.0f);
 		m_currentScene = Scene::Stage2;
-		//break;
+		break;
 	case ecc::Scene::Stage3:
+		m_gameEngine->ClearScene();
+		m_gameEngine->LoadSprite(TUTORIAL_2_FILENAME, 0, 0, true, 3.0f);
 		m_currentScene = Scene::Stage3;
-		//break;
+		break;
 	case ecc::Scene::Defense:
 	{
 		SDL_SetWindowSize(window, 1728, 832);

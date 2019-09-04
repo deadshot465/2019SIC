@@ -31,6 +31,8 @@ namespace ecc {
 		
 		inline static const std::string TITLE_SCREEN_FILENAME = "texture/sprite/cover1.png";
 		inline static const std::string GAMEOVER_SCREEN_FILENAME = "texture/sprite/gameover.png";
+		inline static const std::string TUTORIAL_1_FILENAME = "texture/sprite/tutorial window1.png";
+		inline static const std::string TUTORIAL_2_FILENAME = "texture/sprite/turorial window2_revised.png";
 		inline static const std::string STATIC_BACKGROUND_FILENAME = "texture/sprite/final bg.png";
 		inline static const std::string DYNAMIC_BACKGROUND_FILENAME = "texture/sprite/final bg.png";
 		inline static const std::string HP_BAR_FILENAME = "texture/sprite/healthbar.png";
