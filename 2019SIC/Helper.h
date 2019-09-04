@@ -171,4 +171,11 @@ namespace ecc {
 
 		return generator(engine);
 	}
+
+	inline double GetRandomDouble(double lower, double upper) {
+		auto engine = GetRandomSeededEngine();
+		auto generator = std::uniform_real_distribution<>(lower, upper);
+
+		return generator(engine);
+	}
 }

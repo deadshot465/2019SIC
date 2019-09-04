@@ -8,6 +8,11 @@
 #include <set>
 #include <sstream>
 
+#if _DEBUG
+#else
+#define NDEBUG
+#endif
+
 ecc::TileCoordinatesSet ecc::GameEngine::CalculateTileCoordinates(int totalWidth, int totalHeight)
 {
 	auto tile_coordinates = TileCoordinatesSet();
@@ -79,6 +84,8 @@ void ecc::GameEngine::UpdateCharacters(int offsetX, int offsetY, SDL_Surface* wi
 		m_daughter->Jump();
 		m_daughter->Move(windowSurface);
 	}
+
+	m_daughter->Move();
 
 	m_father->Render(m_renderer, offsetX,
 		offsetY, 0.0f);
@@ -337,9 +344,12 @@ void ecc::GameEngine::MoveEnemy(SDL_Surface* windowSurface)
 {
 	for (auto& enemy : m_enemies) {
 
+#ifdef NDEBUG
+#else
 		SDL_SetRenderDrawColor(m_renderer, 0xFF, 0x00, 0x00, 0xFF);
 		SDL_RenderDrawRect(m_renderer, &(enemy->GetCollisionBox()));
 		SDL_SetRenderDrawColor(m_renderer, 0xFF, 0xFF, 0xFF, 0xFF);
+#endif
 
 		auto collided = std::any_of(m_walkableTiles.begin(), m_walkableTiles.end(),
 			[&](const SDL_Rect& rect) {
@@ -703,7 +713,7 @@ void ecc::GameEngine::GenerateEnemy()
 	if (duration > random_seconds) {
 		auto random_index = GetRandomInt(0, 5);
 		LoadEnemy(RandomEnemyPositions[random_index].x, RandomEnemyPositions[random_index].y, 3.5f);
-		random_seconds = GetRandomInt(1, 5);
+		random_seconds = GetRandomInt(lower_bound, upper_bound);
 		start_time = current_time;
 	}
 	if (countdown_timer > 15.0f && lower_bound != 0 && upper_bound != 3) {

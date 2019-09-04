@@ -1,5 +1,6 @@
 #include "Character.h"
 #include <algorithm>
+#include <cassert>
 #include <iostream>
 #include "Helper.h"
 
@@ -73,11 +74,75 @@ ecc::Character::~Character()
 
 void ecc::Character::Move()
 {
+	assert(m_statusFlag != CharacterStatusFlag::Controllable);
+
+	static const auto original_x = static_cast<double>(m_images[0]->m_destinationLocation.x) / CHARACTER_SPRITE_WIDTH;
+
+	static auto next_destination = 0;
+	static auto idle_flag = false;
+	
+	static const auto timer_limit = 5.0;
+	static auto timer_started = false;
+	static auto timer_start_time = std::chrono::time_point<std::chrono::steady_clock>();
+	static auto timer = 0.0;
+
+	if (!m_animationStarted && !idle_flag) {
+		while (next_destination == 0)
+			next_destination = GetRandomInt(-12, 12);
+		m_flipMode = (next_destination > 0) ? SDL_FLIP_NONE : SDL_FLIP_HORIZONTAL;
+		m_currentImageIndex = ImageIndexFlag::Move;
+		m_animationStarted = true;
+	}
+	else if (m_animationStarted && !idle_flag) {
+		if (next_destination > 0) {
+			for (auto& image : m_images) {
+				image->MoveDestinationLocation(m_speed, 0);
+			}
+		}
+		else {
+			for (auto& image : m_images) {
+				image->MoveDestinationLocation(-m_speed, 0);
+			}
+		}
+		next_destination += (next_destination > 0) ? -1 : 1;
+
+		if (next_destination == 0) {
+			m_currentImageIndex = ImageIndexFlag::Idle;
+			m_animationStarted = false;
+			idle_flag = true;
+		}
+	}
+	else if (!m_animationStarted && idle_flag) {
+		if (!timer_started) {
+			timer = GetRandomDouble(0.0, timer_limit);
+			timer_start_time = std::chrono::high_resolution_clock::now();
+			timer_started = true;
+		}
+		else {
+			auto current_time = std::chrono::high_resolution_clock::now();
+			auto duration = std::chrono::duration<double, std::chrono::seconds::period>(current_time - timer_start_time).count();
+
+			if (duration > timer) {
+				idle_flag = false;
+				timer_started = false;
+
+				auto current_offset = static_cast<double>(m_images[0]->m_destinationLocation.x) / CHARACTER_SPRITE_WIDTH;
+				if (std::abs(current_offset - original_x) >= 18) {
+					if (current_offset < original_x) {
+						next_destination = static_cast<int>(std::abs(current_offset - original_x));
+					}
+					else {
+						next_destination = static_cast<int>(std::abs(current_offset - original_x)) * -1;
+					}
+				}
+			}
+		}
+	}
 }
 
 void ecc::Character::Move(SDL_Surface* windowSurface)
 {
-	if (m_statusFlag == CharacterStatusFlag::Incontrollable) return;
+	assert(m_statusFlag != CharacterStatusFlag::Incontrollable);
 
 	auto current_key_states = SDL_GetKeyboardState(nullptr);
 
@@ -187,7 +252,7 @@ void ecc::Character::Animate(float speedFactor)
 		if (m_animationStarted) ++m_animationTimer;
 
 		if (m_currentFrame >= m_frameCounts[static_cast<size_t>(m_currentImageIndex)]) {
-			if (m_animationStarted) {
+			if (m_animationStarted && m_statusFlag == CharacterStatusFlag::Controllable) {
 				m_animationTimer = 0;
 				m_animationStarted = false;
 				auto key_state = SDL_GetKeyboardState(nullptr);

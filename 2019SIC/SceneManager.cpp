@@ -91,8 +91,6 @@ void ecc::SceneManager::LoadScene(SDL_Window* window, SDL_Surface** surface, Sce
 		m_gameEngine->LoadMap(DEFENSE_FILENAME);
 		m_gameEngine->LoadTileSet(*surface, false, true);
 
-#ifdef NDEBUG
-#else
 		m_gameEngine->CreateCollisionBox(768, 240,
 			2 * CHARACTER_SPRITE_WIDTH, 2 * CHARACTER_SPRITE_HEIGHT);
 		m_gameEngine->CreateCollisionBox(1584, 0,
@@ -107,7 +105,6 @@ void ecc::SceneManager::LoadScene(SDL_Window* window, SDL_Surface** surface, Sce
 			2 * CHARACTER_SPRITE_WIDTH, 2 * CHARACTER_SPRITE_HEIGHT);
 		m_gameEngine->CreateCollisionBox(16, 640,
 			2 * CHARACTER_SPRITE_WIDTH, 2 * CHARACTER_SPRITE_HEIGHT);*/
-#endif
 
 			//m_gameEngine->LoadEnemy(16, 32, 5.0f);
 		m_gameEngine->LoadCharacter(Character::CharacterFlag::Father,
