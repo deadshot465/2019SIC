@@ -1,5 +1,6 @@
 #pragma once
 #include <array>
+#include <list>
 #include <memory>
 #include <SDL.h>
 #include <string>
@@ -55,7 +56,7 @@ namespace ecc {
 		};
 
 		inline static const EnemyAnimationParameters ENEMY_PARAMETERS = {
-			4.5, 3.0, 0.45
+			4.5f, 3.0f, 0.45f
 		};
 
 		std::vector<Vector2> RandomEnemyPositions = {
@@ -68,7 +69,7 @@ namespace ecc {
 		SDL_Texture* m_cameraRtv = nullptr;
 
 		std::vector<std::unique_ptr<Image>> m_images;
-		std::vector<std::unique_ptr<Enemy>> m_enemies;
+		std::list<std::unique_ptr<Enemy>> m_enemies;
 		std::unique_ptr<Camera> m_camera = nullptr;
 		std::unique_ptr<Character> m_father = nullptr;
 		std::unique_ptr<Character> m_daughter = nullptr;		
@@ -140,6 +141,15 @@ namespace ecc {
 			bool transparency, float magnifier);
 		void LoadHpChunk(const std::string& fileName, int xPos, int yPos,
 			bool transparency, float magnifier);
+
+		int m_combo = 0;
+		std::unique_ptr<Image> m_comboSprite = nullptr;
+		std::unique_ptr<Image> m_comboWordSprite = nullptr;
+		void LoadComboSprite(const std::string& numberFileName,
+			const std::string& comboFileName,
+			int xPos, int yPos,
+			bool transparency, float magnifier, int clipX, int clipY);
+		void SwitchComboSprite();
 
 		friend SceneManager;
 	public:

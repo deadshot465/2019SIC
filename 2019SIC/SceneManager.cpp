@@ -79,6 +79,7 @@ void ecc::SceneManager::LoadScene(SDL_Window* window, SDL_Surface** surface, Sce
 			m_gameEngine->LoadHpChunk(HP_CHUNK_FILENAME, offset, 72, true, 2.5f);
 		}
 
+		m_gameEngine->LoadComboSprite(COMBO_FILENAME, COMBO_WORD_FILENAME, 16, 257, true, 1.2f, 64, 64);
 		m_gameEngine->LoadAnimatedSprite(DYNAMIC_BACKGROUND_FILENAME, 0, 0, true, 2.0f, 864, 416);
 		m_gameEngine->LoadMap(DEFENSE_FILENAME);
 		m_gameEngine->LoadTileSet(*surface, false, true);
@@ -88,13 +89,13 @@ void ecc::SceneManager::LoadScene(SDL_Window* window, SDL_Surface** surface, Sce
 		m_gameEngine->CreateCollisionBox(768, 240,
 			2 * CHARACTER_SPRITE_WIDTH, 2 * CHARACTER_SPRITE_HEIGHT);
 		m_gameEngine->CreateCollisionBox(1584, 0,
-			1.0f * CHARACTER_SPRITE_WIDTH, 2 * CHARACTER_SPRITE_HEIGHT);
+			1 * CHARACTER_SPRITE_WIDTH, 2 * CHARACTER_SPRITE_HEIGHT);
 		/*m_gameEngine->CreateCollisionBox(16, 0,
 			2 * CHARACTER_SPRITE_WIDTH, 2 * CHARACTER_SPRITE_HEIGHT);*/
 		m_gameEngine->CreateCollisionBox(1584, 448,
-			1.0f * CHARACTER_SPRITE_WIDTH, 2 * CHARACTER_SPRITE_HEIGHT);
+			1 * CHARACTER_SPRITE_WIDTH, 2 * CHARACTER_SPRITE_HEIGHT);
 		m_gameEngine->CreateCollisionBox(16, 448,
-			1.0f * CHARACTER_SPRITE_WIDTH, 2 * CHARACTER_SPRITE_HEIGHT);
+			1 * CHARACTER_SPRITE_WIDTH, 2 * CHARACTER_SPRITE_HEIGHT);
 		/*m_gameEngine->CreateCollisionBox(1584, 640,
 			2 * CHARACTER_SPRITE_WIDTH, 2 * CHARACTER_SPRITE_HEIGHT);
 		m_gameEngine->CreateCollisionBox(16, 640,

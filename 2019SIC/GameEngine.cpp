@@ -1,5 +1,6 @@
 #include "GameEngine.h"
 #include <algorithm>
+#include <cassert>
 #include <chrono>
 #include <fstream>
 #include <iostream>
@@ -35,7 +36,8 @@ ecc::TileCoordinatesSet ecc::GameEngine::CalculateTileCoordinates(int totalWidth
 
 void ecc::GameEngine::GetAllWalkableTiles()
 {
-	for (const auto& tile : m_tileSet[0]) {
+	size_t index = (m_tileSet.size() >= 2) ? 1 : 0;
+	for (const auto& tile : m_tileSet[index]) {
 		if (tile->IsWalkable()) {
 			m_walkableTiles.emplace_back(tile->GetCollisionBox());
 		}
@@ -44,7 +46,8 @@ void ecc::GameEngine::GetAllWalkableTiles()
 
 void ecc::GameEngine::GetAllBlockedTiles()
 {
-	for (const auto& tile : m_tileSet[1]) {
+	size_t index = (m_tileSet.size() >= 2) ? 1 : 0;
+	for (const auto& tile : m_tileSet[index]) {
 		if (tile->IsBlocked()) {
 			m_blockedTiles.emplace_back(tile->GetCollisionBox());
 		}
@@ -53,7 +56,8 @@ void ecc::GameEngine::GetAllBlockedTiles()
 
 void ecc::GameEngine::GetAllClimbableTiles()
 {
-	for (const auto& tile : m_tileSet[1]) {
+	size_t index = (m_tileSet.size() >= 2) ? 1 : 0;
+	for (const auto& tile : m_tileSet[index]) {
 		if (tile->IsClimbable()) {
 			m_climbableTiles.emplace_back(tile->GetCollisionBox());
 		}
@@ -64,78 +68,16 @@ void ecc::GameEngine::UpdateCharacters(int offsetX, int offsetY, SDL_Surface* wi
 {
 	if (!m_father || !m_daughter) return;
 
-	/*for (const auto& tile : m_climbableTiles) {
-		if (m_characterIndex == 0) {
-			if (m_father->CheckCollision(tile)) {
-				
-				auto ladder = std::vector<SDL_Rect>();
-				
-				for (const auto& tile_ : m_climbableTiles) {
-					if (tile_.x == tile.x) {
-						ladder.emplace_back(tile_);
-					}
-				}
-
-				auto y_coordinates = std::vector<int>();
-				std::transform(ladder.begin(), ladder.end(), std::back_inserter(y_coordinates),
-					[&](const SDL_Rect& rect) -> int {
-						return rect.y;
-					});
-
-				auto max_y = std::max_element(y_coordinates.begin(), y_coordinates.end());
-				auto min_y = std::min_element(y_coordinates.begin(), y_coordinates.end());
-
-				bool move_upward = false;
-				
-				if (tile.y == *max_y) {
-					move_upward = true;
-				}
-
-				auto key_state = SDL_GetKeyboardState(nullptr);
-				if (key_state[SDL_SCANCODE_W]) {
-					if (move_upward) {
-						m_father->Climb(tile.x, (*min_y) + 2 * TILE_HEIGHT);
-					}
-					else {
-						m_father->Climb(tile.x, (*max_y) - 7 * TILE_HEIGHT);
-					}
-				}
-			}
-		}
-	}*/
-
 	auto father_position = m_father->GetCurrentDestination();
 	auto daughter_position = m_daughter->GetCurrentDestination();
 
 	if (m_characterIndex == 0) {
 		m_father->Jump();
 		m_father->Move(windowSurface);
-		/*auto walkable_area_found = false;
-		for (const auto& tile : m_walkableTiles) {
-			if (m_father->CheckCollision(tile)) {
-				m_father->Move(windowSurface);
-				walkable_area_found = true;
-			}
-		}*/
-		//auto blocked_area_found = false;
-		/*if (!walkable_area_found) {
-			for (const auto& tile : m_blockedTiles) {
-				if (m_father->CheckCollision(tile)) {
-					blocked_area_found = true;
-				}
-			}
-			if (!blocked_area_found)
-				m_father->Fall();
-		}*/
 	}
 	else {
 		m_daughter->Jump();
 		m_daughter->Move(windowSurface);
-		/*for (const auto& tile : m_walkableTiles) {
-			if (m_daughter->CheckCollision(tile)) {
-				m_daughter->Move(windowSurface);
-			}
-		}*/
 	}
 
 	m_father->Render(m_renderer, offsetX,
@@ -172,10 +114,17 @@ void ecc::GameEngine::UpdateCharacters(int offsetX, int offsetY, SDL_Surface* wi
 	while (iter != m_enemies.end()) {
 		if (m_father->CheckAttackCollision(iter->get()->GetCollisionBox())) {
 			iter = m_enemies.erase(iter);
+			++m_combo;
 		}
 		else {
 			++iter;
 		}
+	}
+
+	if (m_combo >= 5) {
+		m_combo = 0;
+		m_hp += 50;
+		m_hp = std::clamp<int>(m_hp, 0, 500);
 	}
 }
 
@@ -187,7 +136,7 @@ void ecc::GameEngine::CreateTiles(size_t imageIndex, int totalWidth, int totalHe
 	auto dst_rect = SDL_Rect();
 	bool is_lit = false;
 
-	auto tex_coord_index = m_tileCoordinateMapping[0];
+	auto tex_coord_index = m_tileCoordinateMapping[imageIndex];
 	auto tex_coord = m_tileCoordinates[tex_coord_index];
 	auto total_rows = tex_coord.size();
 	auto total_columns = tex_coord[0].size();
@@ -195,7 +144,7 @@ void ecc::GameEngine::CreateTiles(size_t imageIndex, int totalWidth, int totalHe
 	int y = 0;
 	auto tiles = std::vector<std::shared_ptr<Tile>>();
 
-	for (const auto& row : m_maps[0]) {
+	for (const auto& row : m_maps[imageIndex]) {
 		for (const auto& column : row) {
 			for (auto current_row = static_cast<int64_t>(total_rows) - 2ll; current_row >= 0ll; current_row -= 2ll) {
 				auto offset = current_row * total_columns;
@@ -215,9 +164,7 @@ void ecc::GameEngine::CreateTiles(size_t imageIndex, int totalWidth, int totalHe
 				}
 			}
 			dst_rect.x = x * TILE_WIDTH * 2;
-			//dst_rect.x = x * (windowSurface->w / m_currentMapWidth * TILE_WIDTH);
 			dst_rect.y = y * TILE_HEIGHT * 2;
-			//dst_rect.y = y * (windowSurface->h / m_currentMapHeight * TILE_HEIGHT);
 			dst_rect.w = TILE_WIDTH * 2;
 			dst_rect.h = TILE_HEIGHT * 2;
 			++x;
@@ -261,9 +208,6 @@ void ecc::GameEngine::RenderTiles(SDL_Surface* windowSurface, const SDL_Rect& ca
 	m_tileRtv = SDL_CreateTexture(m_renderer, format, SDL_TEXTUREACCESS_TARGET,
 		m_currentMapWidth * TILE_WIDTH * 2,
 		m_currentMapHeight * TILE_HEIGHT * 2);
-	//SDL_SetRenderTarget(m_renderer, m_tileRtv);
-	//SDL_SetRenderDrawColor(m_renderer, 0xFF, 0xFF, 0xFF, 0xFF);
-	//SDL_RenderClear(m_renderer);
 
 	for (size_t i = 0; i < m_tileSet.size(); ++i) {
 		auto image_index_iter = std::find_if(m_tileCoordinateMapping.cbegin(),
@@ -299,11 +243,13 @@ void ecc::GameEngine::RenderTiles(SDL_Surface* windowSurface, const SDL_Rect& ca
 #endif
 		}
 	}
-	//SDL_SetRenderTarget(m_renderer, nullptr);
+
 }
 
 ecc::Tile* ecc::GameEngine::GetBackgroundTile(const SDL_Rect& location) noexcept
 {
+	assert(m_tileSet.size() >= 1);
+
 	for (const auto& tile : m_tileSet[0]) {
 		if (tile->GetDestinationLocation().x == location.x &&
 			tile->GetDestinationLocation().y == location.y) {
@@ -316,6 +262,8 @@ ecc::Tile* ecc::GameEngine::GetBackgroundTile(const SDL_Rect& location) noexcept
 
 ecc::Tile* ecc::GameEngine::GetForegroundTile(const SDL_Rect& location) noexcept
 {
+	assert(m_tileSet.size() >= 2);
+
 	for (const auto& tile : m_tileSet[1]) {
 		if (tile->GetDestinationLocation().x == location.x &&
 			tile->GetDestinationLocation().y == location.y) {
@@ -518,6 +466,7 @@ void ecc::GameEngine::ClearScene()
 	m_windowGenerated = false;
 	m_daughter.reset();
 	m_father.reset();
+	m_collisionBoxes.clear();
 	m_climbableTiles.clear();
 	m_blockedTiles.clear();
 	m_walkableTiles.clear();
@@ -527,7 +476,13 @@ void ecc::GameEngine::ClearScene()
 	m_currentMapHeight = 0;
 	m_currentMapWidth = 0;
 	m_maps.clear();
+	m_animatedSprite.reset();
+	m_comboWordSprite.reset();
+	m_comboSprite.reset();
+	m_hpChunk.clear();
+	m_hpBar.reset();
 	m_images.clear();
+
 }
 
 void ecc::GameEngine::LoadSprite(const std::string& fileName, int xPos, int yPos, bool transparency, float magnifier)
@@ -577,6 +532,10 @@ ecc::GameEngine::GameEngine(SDL_Window* window, SDL_Surface* windowSurface)
 ecc::GameEngine::~GameEngine()
 {
 	ClearScene();
+	m_mixer.reset();
+	m_objectFactory.reset();
+	m_camera.reset();
+
 	SDL_DestroyTexture(m_tileRtv);
 	SDL_DestroyTexture(m_defaultRtv);
 	SDL_DestroyRenderer(m_renderer);
@@ -768,6 +727,26 @@ void ecc::GameEngine::LoadHpChunk(const std::string& fileName, int xPos, int yPo
 	iter->get()->LoadSprite(m_renderer, fileName, xPos, yPos, transparency, magnifier);
 }
 
+void ecc::GameEngine::LoadComboSprite(const std::string& numberFileName,
+	const std::string& comboFileName,
+	int xPos, int yPos, bool transparency, float magnifier, int clipX, int clipY)
+{
+	m_comboSprite = std::make_unique<Image>();
+	m_comboSprite->LoadAnimatedSprite(m_renderer, numberFileName, xPos, yPos, transparency,
+		magnifier, clipX, clipY);
+	m_comboWordSprite = std::make_unique<Image>();
+	m_comboWordSprite->LoadSprite(m_renderer, comboFileName, xPos + 128, yPos + 64, transparency);
+}
+
+void ecc::GameEngine::SwitchComboSprite()
+{
+	if (m_combo < 3) return;
+	auto offset = m_combo * 64;
+	m_comboSprite->SetTexCoord(offset, 0);
+	m_comboSprite->Render(m_renderer);
+	m_comboWordSprite->Render(m_renderer);
+}
+
 void ecc::GameEngine::LoadEnemy(int xPos, int yPos, float speed)
 {
 	m_enemies.emplace_back(std::make_unique<Enemy>(m_renderer,
@@ -799,27 +778,47 @@ void ecc::GameEngine::Render(SDL_Surface* windowSurface, Scene scene)
 
 	if (scene == Scene::Defense) {
 		PlayAnimatedSprite();
-	}
 
-	RenderTiles(windowSurface, { 0, 0, 0, 0 });
-	
+		RenderTiles(windowSurface, { 0, 0, 0, 0 });
+
 #ifdef NDEBUG
 #else
-	for (const auto& box : m_collisionBoxes) {
-		SDL_SetRenderDrawColor(m_renderer, 0x66, 0x66, 0x66, 0xFF);
-		SDL_RenderDrawRect(m_renderer, &box);
-		SDL_SetRenderDrawColor(m_renderer, 0xFF, 0xFF, 0xFF, 0xFF);
-	}
+		for (const auto& box : m_collisionBoxes) {
+			SDL_SetRenderDrawColor(m_renderer, 0x66, 0x66, 0x66, 0xFF);
+			SDL_RenderDrawRect(m_renderer, &box);
+			SDL_SetRenderDrawColor(m_renderer, 0xFF, 0xFF, 0xFF, 0xFF);
+		}
 #endif
-	
-	////SDL_RenderCopy(m_renderer, m_tileRtv, nullptr, nullptr);
 
-	//SDL_SetRenderTarget(m_renderer, m_cameraRtv);
-	////SDL_RenderClear(m_renderer);
-	//SDL_RenderCopy(m_renderer, m_tileRtv,
-	//	&(m_camera->GetCollisionBox()),
-	//	nullptr);
-	//
+		UpdateCharacters(0, 0, windowSurface);
+
+		GenerateEnemy();
+		MoveEnemy(windowSurface);
+
+#ifdef NDEBUG
+#else
+		if (m_father && m_daughter) {
+			SDL_SetRenderDrawColor(m_renderer, 0xFF, 0x00, 0x00, 0xFF);
+			SDL_RenderDrawRect(m_renderer, &(m_father->GetAttackCollisionBox()));
+			SDL_SetRenderDrawColor(m_renderer, 0xFF, 0xFF, 0x00, 0xFF);
+			SDL_RenderDrawRect(m_renderer, &(m_daughter->GetCollisionBox()));
+		}
+#endif
+
+		if (m_hpBar)
+			m_hpBar->Render(m_renderer);
+
+		if (!m_hpChunk.empty()) {
+			float percentage = static_cast<float>(m_hp) / 500.0f;
+			float show_percentage = percentage * 149.0f;
+			for (auto i = 0; i < static_cast<size_t>(show_percentage); ++i) {
+				m_hpChunk[i]->Render(m_renderer);
+			}
+		}
+
+		if (m_comboSprite)
+			SwitchComboSprite();
+	}
 
 	//for (const auto& object : m_objects) {
 	//	object->Render(m_renderer);
@@ -828,51 +827,32 @@ void ecc::GameEngine::Render(SDL_Surface* windowSurface, Scene scene)
 	/*SDL_SetRenderTarget(m_renderer, nullptr);
 	SDL_RenderCopy(m_renderer, m_tileRtv, nullptr, nullptr);*/
 
-	GenerateWindows(scene);
+	//GenerateWindows(scene);
 
 	/*for (const auto& key : m_keys) {
 		key->Render(m_renderer, 1.0f);
 	}*/
 
-	UpdateCharacters(0, 0, windowSurface);
-
-	GenerateEnemy();
-	MoveEnemy(windowSurface);
-
-#ifdef NDEBUG
-#else
-	if (m_father && m_daughter) {
-		SDL_SetRenderDrawColor(m_renderer, 0xFF, 0x00, 0x00, 0xFF);
-		SDL_RenderDrawRect(m_renderer, &(m_father->GetAttackCollisionBox()));
-		SDL_SetRenderDrawColor(m_renderer, 0xFF, 0xFF, 0x00, 0xFF);
-		SDL_RenderDrawRect(m_renderer, &(m_daughter->GetCollisionBox()));
-	}
-#endif
-
-	if (m_hpBar)
-		m_hpBar->Render(m_renderer);
-
-	if (!m_hpChunk.empty()) {
-		float percentage = static_cast<float>(m_hp) / 500.0f;
-		float show_percentage = percentage * 149.0f;
-		for (auto i = 0; i < static_cast<size_t>(show_percentage); ++i) {
-			m_hpChunk[i]->Render(m_renderer);
-		}
-	}
-
 	SDL_RenderPresent(m_renderer);
 
-	for (const auto& enemy : m_enemies) {
-		if (m_daughter->CheckCollision(enemy->GetCollisionBox())) {
-			m_currentGameStatus = GameStatus::GameOver;
-			return;
-		}
+	auto is_daughter_hit = std::any_of(m_enemies.cbegin(), m_enemies.cend(), [&](const std::unique_ptr<Enemy>& enemy) {
+		return m_daughter->CheckCollision(enemy->GetCollisionBox());
+		});
+
+	if (is_daughter_hit) {
+		m_currentGameStatus = GameStatus::GameOver;
+		return;
 	}
 
-	for (const auto& enemy : m_enemies) {
-		if (m_father->CheckCollision(enemy->GetCollisionBox())) {
+	auto iter = m_enemies.begin();
+	while (iter != m_enemies.end()) {
+		if (m_father->CheckCollision(iter->get()->GetCollisionBox())) {
 			m_hp -= 50;
+			iter = m_enemies.erase(iter);
 			break;
+		}
+		else {
+			++iter;
 		}
 	}
 }

@@ -35,6 +35,8 @@ namespace ecc {
 		inline static const std::string DYNAMIC_BACKGROUND_FILENAME = "texture/sprite/final bg.png";
 		inline static const std::string HP_BAR_FILENAME = "texture/sprite/healthbar.png";
 		inline static const std::string HP_CHUNK_FILENAME = "texture/sprite/HP chunk.png";
+		inline static const std::string COMBO_FILENAME = "texture/sprite/numbers.png";
+		inline static const std::string COMBO_WORD_FILENAME = "texture/sprite/combo.png";
 		inline static const std::string DEFENSE_FILENAME = "map/Stage_DefenceFG.txt";
 
 		std::unique_ptr<GameEngine> m_gameEngine = nullptr;
